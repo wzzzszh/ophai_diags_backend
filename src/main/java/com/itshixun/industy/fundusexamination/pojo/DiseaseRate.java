@@ -2,7 +2,9 @@
 package com.itshixun.industy.fundusexamination.pojo;
 
 import jakarta.persistence.*;
+import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
@@ -14,16 +16,21 @@ import java.util.Date;
  * @Date 2023/4/18 15:40
  *
  **/
+@Data
 @Table(name="disease_rate")
 @Entity
+
 //绑定case写77777
 public class DiseaseRate {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Integer id;
-//    @Column(name = "disease_type")
-//    private Integer type;
+    @GeneratedValue(
+            generator = "tableNameGenerator"
+    )
+    @GenericGenerator(
+            name = "tableNameGenerator",
+            strategy = "com.itshixun.industy.fundusexamination.Utils.IdGenetated.TableNameIdGenerator"
+    )
+    private String diseaseRateId;
     @Column(name = "d_disease_rate")
     private Double dRate;    // 糖尿病概率
     @Column(name = "g_disease_rate")
@@ -48,12 +55,12 @@ public class DiseaseRate {
     @UpdateTimestamp
     private LocalDateTime updateDate;
 
-    public Integer getId() {
-        return id;
+    public String getDiseaseRateId() {
+        return diseaseRateId;
     }
 
-    public void setId(Integer id) {
-        this.id = id;
+    public void setDiseaseRateId(String diseaseRateId) {
+        this.diseaseRateId = diseaseRateId;
     }
 
     public Double getdRate() {

@@ -15,7 +15,7 @@ public interface UserService {
      * @param userId
      * @return
      */
-    User getUser(Integer userId);
+    User getUser(String userId);
     /**
      * 更新用户
      * @param user
@@ -28,7 +28,7 @@ public interface UserService {
      *
      * @param userId
      */
-    void delete(Integer userId);
+    void delete(String userId);
 
     /**
      * 通过用户名查询用户登录
@@ -42,4 +42,10 @@ public interface UserService {
      * @return
      * */
     void updateAvatar(String avatarUrl);
+    /**
+     * 通过用户ID查询用户
+     * @param user
+     * @return
+     */
+    User findByUserId(UserDto user);
 }

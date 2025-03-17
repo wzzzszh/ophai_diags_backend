@@ -5,7 +5,28 @@ import org.springframework.stereotype.Service;
 
 
 public interface DiagService {
-    DiagnosedCaseDto getDiag(Integer id);
-
+    /**
+     *  获取诊断信息
+     * @param id
+     * @return
+     */
+    DiagnosedCaseDto getDiag(String id);
+    /**
+     * 添加诊断信息
+     * @param diag
+     * @return
+     */
     DiagnosedCaseDto addDiag(DiagnosedCaseDto diag);
+    /**
+     * 更新诊断信息
+     * @param diag
+     * @return
+     */
+    DiagnosedCaseDto updateDiag(DiagnosedCaseDto diag);
+
+    /**
+     *  删除诊断信息
+     * @param id
+     */
+    void deleteDiag(String id);
 }

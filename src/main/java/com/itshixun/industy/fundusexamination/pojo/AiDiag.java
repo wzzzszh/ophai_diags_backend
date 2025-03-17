@@ -3,6 +3,7 @@ package com.itshixun.industy.fundusexamination.pojo;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
@@ -17,8 +18,14 @@ import java.util.List;
 @Entity
 public class AiDiag {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(
+            generator = "tableNameGenerator"
+    )
+    @GenericGenerator(
+            name = "tableNameGenerator",
+            strategy = "com.itshixun.industy.fundusexamination.Utils.IdGenetated.TableNameIdGenerator"
+    )
+    private String aiDiagId;
     //疾病类型
     @Column(name="disease_type")
     private Integer diseaseType;

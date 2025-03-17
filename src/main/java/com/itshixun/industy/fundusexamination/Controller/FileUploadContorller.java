@@ -12,7 +12,7 @@ import java.util.UUID;
 @RestController
 public class FileUploadContorller {
 
-    @PostMapping("/upload")
+    @PostMapping("/api/upload")
     public ResponseMessage<String> fileUpload(MultipartFile file) throws Exception {
         //
         String originalFileName = file.getOriginalFilename();

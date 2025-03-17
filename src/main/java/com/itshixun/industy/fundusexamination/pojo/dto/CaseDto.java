@@ -15,7 +15,7 @@ import lombok.Data;
 @Data
 public class CaseDto {
     // 病例信息
-    private Integer id;
+    private String caseId;
     //疾病类型
     private Integer diseaseType;
     //责任医师

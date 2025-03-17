@@ -14,8 +14,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.itshixun.industy.fundusexamination.Utils.Md5Util.checkPassword;
+
 @RestController //接口方法返回对象，转换成json文本
-@RequestMapping("/user")
+@RequestMapping("/api/user")
 public class
 UserController {
     @Autowired
@@ -29,15 +31,16 @@ UserController {
 
     //登录
     @PostMapping("/login")
-    public ResponseMessage<User> login(@RequestBody UserDto user) {
-        User userNew = userService.findByUserName(user);
+    public ResponseMessage<User> login( @RequestBody UserDto user) {
+//        User userNew = userService.findByUserName(user);
+        User userNew = userService.findByUserId(user);
         //判断该用户是否存在
         if(userNew == null) {
-            System.out.println("用户不存在");
-            return ResponseMessage.success(userNew);
+            return ResponseMessage.allError(411,"用户不存在");
         }
+
         //判断密码是否正确
-        if (userNew.getPasswordHash().equals(user.getPasswordHash())) {
+        if (checkPassword(user.getPasswordHash(), userNew.getPasswordHash())) {
             //JWT 生成token
             Map<String,Object> claims = new HashMap<>();
             claims.put("userId", userNew.getUserId());
@@ -47,11 +50,11 @@ UserController {
             return ResponseMessage.success(token);
         }
         System.out.println("登陆出现未知错误");
-        return ResponseMessage.success(userNew);
+        return ResponseMessage.allError(412,"登陆出现未知错误");
     }
     //查询
-    @GetMapping("/{userId}")
-    public ResponseMessage<User> getUser(@PathVariable Integer userId) {
+    @GetMapping("/sellect/{userId}")
+    public ResponseMessage<User> getUser(@PathVariable String userId) {
         User userNew = userService.getUser(userId);
         return ResponseMessage.success(userNew);
     }
@@ -65,7 +68,7 @@ UserController {
 
     //删除用户
     @DeleteMapping("/{userId}")
-    public ResponseMessage<User> deleteUser(@PathVariable Integer userId) {
+    public ResponseMessage<User> deleteUser(@PathVariable String userId) {
 
         userService.delete(userId);
         return ResponseMessage.success();

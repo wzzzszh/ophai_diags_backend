@@ -3,6 +3,7 @@ package com.itshixun.industy.fundusexamination.pojo;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
@@ -14,13 +15,21 @@ import java.util.List;
  * @Date 2025/4/18 15:40
  *
  **/
+@Data
 @Entity
 @Table(name = "normal_diag")
 public class NormalDiag {
     // 主键
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    @GeneratedValue(
+            generator = "tableNameGenerator"
+    )
+    @GenericGenerator(
+            name = "tableNameGenerator",
+            strategy = "com.itshixun.industy.fundusexamination.Utils.IdGenetated.TableNameIdGenerator"
+    )
+    @Column(name = "diag_id")
+    private String nDiagId;
 
     // 更新日期
 //    private Date date;
@@ -54,59 +63,4 @@ public class NormalDiag {
     @UpdateTimestamp
     private LocalDateTime updateDate;
 
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-//    public Date getDate() {
-//        return date;
-//    }
-//
-//    public void setDate(Date date) {
-//        this.date = date;
-//    }
-
-    public String getDoctorName() {
-        return doctorName;
-    }
-
-    public void setDoctorName(String doctorName) {
-        this.doctorName = doctorName;
-    }
-
-    public String getDepartment() {
-        return department;
-    }
-
-    public void setDepartment(String department) {
-        this.department = department;
-    }
-
-    public List<String> getDocSuggestions() {
-        return DocSuggestions;
-    }
-
-    public void setDocSuggestions(List<String> docSuggestions) {
-        DocSuggestions = docSuggestions;
-    }
-
-    public LocalDateTime getCreateDate() {
-        return createDate;
-    }
-
-    public void setCreateDate(LocalDateTime createDate) {
-        this.createDate = createDate;
-    }
-
-    public LocalDateTime getUpdateDate() {
-        return updateDate;
-    }
-
-    public void setUpdateDate(LocalDateTime updateDate) {
-        this.updateDate = updateDate;
-    }
 }

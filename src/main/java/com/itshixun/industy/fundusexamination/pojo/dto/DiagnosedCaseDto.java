@@ -21,29 +21,26 @@ import java.util.List;
 public class DiagnosedCaseDto {
     //CaseDto
     // 病例信息
-    private Integer id;
+    private String id;
     // 疾病类型
     private Integer diseaseType;
     // 责任医师
     private String responsibleDoctor;
     // 诊断状态
     private Integer diagStatus;
-    // 患者表
-    private PatientInfo patientInfo;
     // 原始图片
     private OriginImageData originImageData;
     // 处理后的图片
     private PreImageData preImageData;
     // 疾病概率
     private DiseaseRate diseaseRate;
-
+    // 患者表
+    private PatientInfo patientInfo;
     //HistoryCase
     //病例库(查询实现)
     private List<HistoryCase> historyCases;
-
     // AI诊断结果
     private AiDiag aiDiag;
-
     // 普通诊断结果
     private NormalDiag normalDiag;
 

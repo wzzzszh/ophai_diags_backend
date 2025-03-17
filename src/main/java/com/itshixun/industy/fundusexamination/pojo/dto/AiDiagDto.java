@@ -4,6 +4,7 @@ package com.itshixun.industy.fundusexamination.pojo.dto;
 
 import com.itshixun.industy.fundusexamination.pojo.DiseaseRate;
 import lombok.Data;
+import org.springframework.scheduling.support.SimpleTriggerContext;
 
 import java.util.List;
 /**
@@ -14,7 +15,7 @@ import java.util.List;
  **/
 @Data
 public class AiDiagDto {
-    private Long id;
+    private String id;
     //疾病类型
     private Integer diseaseType;
     //AI诊断结果列表1
@@ -29,7 +30,6 @@ public class AiDiagDto {
     private String aiSuggestion2;
     //Ai建议措施3
     private String aiSuggestion3;
-
     //疾病概率
     private DiseaseRate diseaseRate;
 

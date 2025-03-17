@@ -2,7 +2,9 @@ package com.itshixun.industy.fundusexamination.pojo;
 
 
 import jakarta.persistence.*;
+import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
 //import javax.persistence.CascadeType;
 import java.time.LocalDateTime;
@@ -16,13 +18,19 @@ import java.util.Date;
  **/
 @Table(name="ori_image")
 @Entity
+@Data
 public class OriginImageData {
 
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Long id;
+    @GeneratedValue(
+            generator = "tableNameGenerator"
+    )
+    @GenericGenerator(
+            name = "tableNameGenerator",
+            strategy = "com.itshixun.industy.fundusexamination.Utils.IdGenetated.TableNameIdGenerator"
+    )
+    private String imageId;
     @Column(name = "left_image")
     private String leftImage;// 左眼URL或路径
     @Column(name = "right_image")
@@ -35,44 +43,4 @@ public class OriginImageData {
     @Column(name = "update_date")
     @UpdateTimestamp
     private LocalDateTime updateDate;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getLeftImage() {
-        return leftImage;
-    }
-
-    public void setLeftImage(String leftImage) {
-        this.leftImage = leftImage;
-    }
-
-    public String getRightImage() {
-        return rightImage;
-    }
-
-    public void setRightImage(String rightImage) {
-        this.rightImage = rightImage;
-    }
-
-    public LocalDateTime getCreateDate() {
-        return createDate;
-    }
-
-    public void setCreateDate(LocalDateTime createDate) {
-        this.createDate = createDate;
-    }
-
-    public LocalDateTime getUpdateDate() {
-        return updateDate;
-    }
-
-    public void setUpdateDate(LocalDateTime updateDate) {
-        this.updateDate = updateDate;
-    }
 }

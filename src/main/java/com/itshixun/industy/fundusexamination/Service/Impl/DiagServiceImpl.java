@@ -25,9 +25,13 @@ public class DiagServiceImpl implements DiagService {
     @Autowired
     private DiagRepository normalDiagRepository;
     @Override
-    public DiagnosedCaseDto getDiag(Integer id) {
+    public DiagnosedCaseDto getDiag(String id) {
 
-        return null;
+        //1. 从case中获取case，oriI，preI，patiInfo
+        Case CasePojo = caseRepository.findById(id).orElse(null);
+        DiagnosedCaseDto diag = new DiagnosedCaseDto();
+        BeanUtils.copyProperties(CasePojo, diag);
+        return diag;
     }
 
     @Override
@@ -83,5 +87,25 @@ public class DiagServiceImpl implements DiagService {
         caseRepository.save(CasePojo);
         BeanUtils.copyProperties(CasePojo, diag);
         return diag;
+    }
+
+    @Override
+    public DiagnosedCaseDto updateDiag(DiagnosedCaseDto diag) {
+        // 1. 初始化实体对象
+        Case casePojo = new Case();
+
+        // 2. 复制 DTO 属性到实体对象
+        BeanUtils.copyProperties(diag, casePojo);
+
+        // 3. 调用 JPA save()
+        Case savedCase = caseRepository.save(casePojo);
+
+        return diag;
+
+    }
+
+    @Override
+    public void deleteDiag(String id) {
+        caseRepository.updateById(id);
     }
 }

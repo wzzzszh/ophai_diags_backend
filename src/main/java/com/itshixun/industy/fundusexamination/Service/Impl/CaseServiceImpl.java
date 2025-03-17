@@ -72,20 +72,32 @@ public class CaseServiceImpl implements CaseService {
         CasePojo.setPreImageData(pre);
         CasePojo.setPatientInfo(patient);
         CasePojo.setDiseaseRate(rate);
+        CasePojo.setIsDeleted(0);
+        System.out.println(CasePojo);
         return caseRepository.save(CasePojo);
     }
+
+
+
+
     @Override
     public PageBean<CaseDto> getCaseListByPage(
             Integer pageNum, Integer pageSize,
-            Integer diagStatus, Integer diseaseType, Integer patientInfoPatientId
+            Integer diagStatus, Integer diseaseType, String patientInfoPatientId
     ) {
         // 1. 创建 Pageable 参数（PageRequest 是 Pageable 的子类）
+        // 确保 pageNum 和 pageSize 不为 null
+        if (pageNum == null || pageSize == null) {
+            throw new IllegalArgumentException("页码和每页数量不能为空");
+        }
         Pageable pageable = PageRequest.of(pageNum-1, pageSize);
+        System.out.println(pageable);
 
         // 2. 调用仓库方法时传递 Pageable
         Page<Case> casePage = caseRepository.list(
                 diagStatus, diseaseType, patientInfoPatientId, pageable
         );
+        System.out.println(casePage);
 
         //3.仓库方法是成功的
         System.out.println("Total: " + casePage.getTotalElements());
@@ -97,6 +109,26 @@ public class CaseServiceImpl implements CaseService {
 
     @Override
     public CaseDto update(CaseDto caseDto) {
+        // 如果DiseaseRate是新对象（无ID），先保存它
+        DiseaseRate rate = caseDto.getDiseaseRate();
+        if (rate != null && rate.getDiseaseRateId() == null) {
+            diseaseRateRepository.save(rate);
+        }
+        // 如果OriginImageData是新对象（无ID），先保存它
+        OriginImageData origin = caseDto.getOriginImageData();
+        if (origin != null && origin.getImageId() == null) {
+            oriRepository.save(origin);
+        }
+        // 如果PreImageData是新对象（无ID），先保存它
+        PreImageData pre = caseDto.getPreImageData();
+        if (pre != null && pre.getImageId() == null) {
+            preImageRepository.save(pre);
+        }
+        // 如果PatientInfo是新对象（无ID），先保存它
+        PatientInfo patient = caseDto.getPatientInfo();
+        if (patient != null && patient.getPatientId() == null) {
+            patientInfoRepository.save(patient);
+        }
         Case up = new Case();
         BeanUtils.copyProperties(caseDto, up);
         caseRepository.save(up);
@@ -105,9 +137,9 @@ public class CaseServiceImpl implements CaseService {
     }
 
     @Override
-    public void delete(Integer id) {
+    public void delete(String caseId) {
         Case del = new Case();
-        caseRepository.updateById(id);
+        caseRepository.updateById(caseId);
     }
 
     private PageBean<CaseDto> convertToPageBean(Page<Case> casePage) {

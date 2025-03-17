@@ -2,7 +2,9 @@
 package com.itshixun.industy.fundusexamination.pojo;
 
 import jakarta.persistence.*;
+import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Date;
@@ -14,13 +16,19 @@ import java.time.LocalDateTime;
  * @Date 2023/4/18 15:40
  *
  **/
+@Data
 @Table(name = "doc_suggestion")
 @Entity
 public class DoctorSuggestion {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Integer id;
+    @GeneratedValue(
+            generator = "tableNameGenerator"
+    )
+    @GenericGenerator(
+            name = "tableNameGenerator",
+            strategy = "com.itshixun.industy.fundusexamination.Utils.IdGenetated.TableNameIdGenerator"
+    )
+    private String DsuggestionId;
     @Column(name = "case_id")
     private String name;
     private String position;

@@ -14,20 +14,22 @@ public class ResponseMessage<T> {
     }
     //登录认证失败
     public static <T> ResponseMessage<T> loginerror() {
-//        return new ResponseMessage(HttpStatus.OK.value(),"登录认证失败",null);
         throw new BusinessException(401,"登录认证失败");
+    }
+    public static <T>ResponseMessage<T> allError(Integer code, String message) {
+        throw new BusinessException(code,message);
     }
 
     //
     public static <T> ResponseMessage<T> success(String token) {
         return new ResponseMessage(HttpStatus.OK.value(),"success",token);
     }
-    //接口请求失败
+    //无参接口请求成功
     public static <T> ResponseMessage<T> success() {
 
         return new ResponseMessage(HttpStatus.OK.value(),"success",null);
     }
-    //接口请求成功
+    //接口请求成功并且返回数据
     public static <T> ResponseMessage<T> success(T data) {
         return new ResponseMessage(HttpStatus.OK.value(),"success",data);
     }

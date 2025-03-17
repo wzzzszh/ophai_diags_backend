@@ -2,32 +2,55 @@ package com.itshixun.industy.fundusexamination.pojo.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import lombok.Data;
 import org.hibernate.validator.constraints.Length;
 
 /**
  * 用户DTO
  */
-
+@Data
 public class UserDto {
     // 用户ID
-    private Integer userId;
+    private String userId;
     // 用户名
     @NotBlank(message = "用户名不能为空")
     private String userName;
     // SHA256加密密码
     @NotBlank(message = "密码不能为空")
-    @Length(min = 6, message = "密码长度不能少于6位")
+    @Length(min = 6, max = 14,message = "密码长度不能少于6位")
+    @Pattern(regexp = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)[A-Za-z\\d]{6,14}$",
+            message = "密码必须包含大小写字母和数字，不可包含空格")
     private String passwordHash;
+    // 确认密码（仅用于注册/修改密码时校验，不存储）
+    @NotBlank(message = "确认密码不能为空")
+    @Size(min = 6, max = 14, message = "密码长度必须在6到14位之间")
+    @Pattern(regexp = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)[A-Za-z\\d]{6,14}$",
+            message = "密码必须包含大小写字母和数字，不可包含空格")
+    private String confirmPassword;
+    // 身份证号
+    @NotBlank(message = "身份号不能为空")
+    @Size(min = 18, max = 18, message = "身份号必须为18位")
+    @Pattern(regexp = "^[1-9]\\d{5}(19|20)\\d{2}(0[1-9]|1[0-2])[0-9]{2}\\d{3}[0-9X]$",
+            message = "身份号格式不正确，需符合国家标准")
+    private String idNumber;
+    // 医生编号
+    private Integer doctorNumber;
     // 邮箱
     @Email(message = "邮箱格式不正确")
     private String email;
     // 手机号
+    @NotBlank(message = "手机号不能为空")
+    @Size(min = 11, max = 11, message = "手机号必须为11位")
+    @Pattern(regexp = "^1[3-9]\\d{9}$",
+            message = "手机号格式不正确，需以1开头且第二位为3-9")
     private String phone;
     // 真实姓名
     private String realName;
     // 性别
-    // 0: 女
-    // 1: 男
+    // 0: 男
+    // 1: 女
     private int gender;
     // 年龄
     private int age;
@@ -38,91 +61,4 @@ public class UserDto {
     // 头像URL
     private String avatarUrl;
 
-    public Integer getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Integer userId) {
-        this.userId = userId;
-    }
-
-    public String getUserName() {
-        return userName;
-    }
-
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    public String getRealName() {
-        return realName;
-    }
-
-    public void setRealName(String realName) {
-        this.realName = realName;
-    }
-
-    public int getGender() {
-        return gender;
-    }
-
-    public void setGender(int gender) {
-        this.gender = gender;
-    }
-
-    public int getAge() {
-        return age;
-    }
-
-    public void setAge(int age) {
-        this.age = age;
-    }
-
-    public String getHospital() {
-        return hospital;
-    }
-
-    public void setHospital(String hospital) {
-        this.hospital = hospital;
-    }
-
-    public String getPosition() {
-        return position;
-    }
-
-    public void setPosition(String position) {
-        this.position = position;
-    }
-
-    public String getAvatarUrl() {
-        return avatarUrl;
-    }
-
-    public void setAvatarUrl(String avatarUrl) {
-        this.avatarUrl = avatarUrl;
-    }
 }

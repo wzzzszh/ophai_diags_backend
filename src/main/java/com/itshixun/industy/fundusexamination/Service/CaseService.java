@@ -8,6 +8,11 @@ import com.itshixun.industy.fundusexamination.pojo.dto.CaseDto;
 import java.util.List;
 
 public interface CaseService {
+    /**
+     * 添加病例数据
+     * @param caseDto
+     * @return
+     */
     Case add(CaseDto caseDto);
 
     /**
@@ -19,7 +24,7 @@ public interface CaseService {
      * @param patientInfoPatientId
      * @return
      */
-    PageBean<CaseDto> getCaseListByPage(Integer pageNum, Integer pageSize, Integer diagStatus, Integer diseaseType, Integer patientInfoPatientId);
+    PageBean<CaseDto> getCaseListByPage(Integer pageNum, Integer pageSize, Integer diagStatus, Integer diseaseType, String patientInfoPatientId);
 
     /**
      * 更新病例数据
@@ -30,7 +35,7 @@ public interface CaseService {
 
     /**
      * 逻辑删除病例数据
-     * @param id
+     * @param caseId
      */
-    void delete(Integer id);
+    void delete(String caseId);
 }

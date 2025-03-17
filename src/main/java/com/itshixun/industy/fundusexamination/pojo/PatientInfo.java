@@ -1,7 +1,9 @@
 package com.itshixun.industy.fundusexamination.pojo;
 
 import jakarta.persistence.*;
+import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
@@ -13,15 +15,20 @@ import java.util.Date;
  * @Date 2023/4/18 15:40
  *
 **/
+@Data
 @Table(name =  "patient_info")
 @Entity
 public class PatientInfo {
-    //主键外键
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    //患者id
+    @GeneratedValue(
+            generator = "tableNameGenerator"
+    )
+    @GenericGenerator(
+            name = "tableNameGenerator",
+            strategy = "com.itshixun.industy.fundusexamination.Utils.IdGenetated.TableNameIdGenerator"
+    )
     @Column(name = "patient_id")
-    private Long id;
+    private String patientId;
 
     //患者姓名
     @Column(name = "patient_name")
@@ -41,51 +48,6 @@ public class PatientInfo {
     @UpdateTimestamp
     private LocalDateTime updateDate;
 
-    public Long getId() {
-        return id;
-    }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Integer getAge() {
-        return age;
-    }
-
-    public void setAge(Integer age) {
-        this.age = age;
-    }
-
-    public String getGender() {
-        return gender;
-    }
-
-    public void setGender(String gender) {
-        this.gender = gender;
-    }
-
-    public LocalDateTime getCreateDate() {
-        return createDate;
-    }
-
-    public void setCreateDate(LocalDateTime createDate) {
-        this.createDate = createDate;
-    }
-
-    public LocalDateTime getUpdateDate() {
-        return updateDate;
-    }
-
-    public void setUpdateDate(LocalDateTime updateDate) {
-        this.updateDate = updateDate;
-    }
 }

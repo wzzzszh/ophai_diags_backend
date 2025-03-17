@@ -13,19 +13,32 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.domain.Page;
 
 @Repository
-public interface CaseRepository extends CrudRepository<Case, Integer>, JpaRepository<Case, Integer> {
+public interface CaseRepository extends CrudRepository<Case, String>, JpaRepository<Case, String> {
+    /**
+     * 条件分页查询
+     * @param diagStatus
+     * @param diseaseType
+     * @param patientInfoPatientId
+     * @param pageable
+     * @return
+     */
     @Query("SELECT c FROM Case c " +
             "WHERE (:diagStatus IS NULL OR c.diagStatus = :diagStatus) " +
             "AND (:diseaseType IS NULL OR c.diseaseType = :diseaseType) " +
-            "AND (:patientInfoPatientId IS NULL OR c.patientInfo.id = :patientInfoPatientId)"+
+            "AND (:patientInfoPatientId IS NUll OR c.patientInfo.patientId = :patientInfoPatientId)"+
             "AND c.isDeleted = 0")
     Page<Case> list(@Param("diagStatus") Integer diagStatus,
                     @Param("diseaseType") Integer diseaseType,
-                    @Param("patientInfoPatientId") Integer patientInfoPatientId,
-                    Pageable pageable);
+                    @Param("patientInfoPatientId") String patientInfoPatientId,
+                    Pageable pageable
+    );
+
+    /**
+     * 根据id逻辑删除
+     * @param caseId
+     */
     @Modifying
     @Transactional
-    @Query("UPDATE Case c SET c.isDeleted = 1 WHERE c.id = :id")
-    void updateById(@Param("id") Integer id);
-
+    @Query("UPDATE Case c SET c.isDeleted = 1 WHERE c.caseId = :caseId")
+    void updateById(@Param("caseId") String caseId);
 }

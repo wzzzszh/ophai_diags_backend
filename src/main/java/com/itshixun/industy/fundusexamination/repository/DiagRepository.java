@@ -5,5 +5,5 @@ import jdk.jshell.Diag;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.CrudRepository;
 
-public interface DiagRepository extends CrudRepository<NormalDiag, Integer> {
+public interface DiagRepository extends CrudRepository<NormalDiag, String> {
 }

@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/case")
+@RequestMapping("/api/case")
 public class CaseContoller {
     @Autowired
     private CaseService caseService;
@@ -26,9 +26,9 @@ public class CaseContoller {
             Integer pageSize,
             @RequestParam(required = false) Integer diagStatus,
             @RequestParam(required = false) Integer diseaseType,
-            @RequestParam(required = false) Integer patient_info_patient_id
+            @RequestParam(required = false) String patientInfoPatientId
     ) {
-        PageBean<CaseDto> pb = caseService.getCaseListByPage(pageNum,pageSize,diagStatus,diseaseType,patient_info_patient_id);
+        PageBean<CaseDto> pb = caseService.getCaseListByPage(pageNum,pageSize,diagStatus,diseaseType,patientInfoPatientId);
         return ResponseMessage.success(pb);
     }
     //添加病例
@@ -47,12 +47,12 @@ public class CaseContoller {
         return ResponseMessage.success(CaseNew);
     }
     //删除病例
-    @PutMapping("/delete/{id}")
-    public ResponseMessage<CaseDto> deleteCase(@PathVariable Integer id) {
+    @PutMapping("/delete/{caseId}")
+    public ResponseMessage<CaseDto> deleteCase(@PathVariable String caseId) {
 //        Case CaseNew;
 //        CaseNew = caseService.delete(caseDto);
-        caseService.delete(id);
-        return ResponseMessage.success();
+        caseService.delete(caseId);
+        return ResponseMessage.success("删除病例成功");
     }
 
 

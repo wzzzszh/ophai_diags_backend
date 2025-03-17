@@ -3,13 +3,11 @@ package com.itshixun.industy.fundusexamination.Utils.interceptor;
 import com.itshixun.industy.fundusexamination.Utils.JwtUtil;
 import com.itshixun.industy.fundusexamination.Utils.ResponseMessage;
 import com.itshixun.industy.fundusexamination.Utils.ThreadLocalUtil;
-import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @Component
