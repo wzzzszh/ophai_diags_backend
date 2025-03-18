@@ -23,9 +23,9 @@ public class DiagController {
         return ResponseMessage.success(diag);
     }
     // 查询综合诊断信息
-    @GetMapping("/{id}")
-    public ResponseMessage<DiagnosedCaseDto> getDiag(@PathVariable String id) {
-        DiagnosedCaseDto diag = diagService.getDiag(id);
+    @GetMapping("/{caseId}")
+    public ResponseMessage<DiagnosedCaseDto> getDiag(@PathVariable String caseId) {
+        DiagnosedCaseDto diag = diagService.getDiag(caseId);
         return ResponseMessage.success(diag);
     }
     // 更新综合诊断信息

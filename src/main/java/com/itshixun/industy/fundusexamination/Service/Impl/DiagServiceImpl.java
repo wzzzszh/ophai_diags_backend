@@ -25,12 +25,14 @@ public class DiagServiceImpl implements DiagService {
     @Autowired
     private DiagRepository normalDiagRepository;
     @Override
-    public DiagnosedCaseDto getDiag(String id) {
+    public DiagnosedCaseDto getDiag(String caseId) {
 
         //1. 从case中获取case，oriI，preI，patiInfo
-        Case CasePojo = caseRepository.findById(id).orElse(null);
+        Case CasePojo = caseRepository.findById(caseId).orElse(null);
+
         DiagnosedCaseDto diag = new DiagnosedCaseDto();
         BeanUtils.copyProperties(CasePojo, diag);
+        //转换，从毫秒树到时间戳
         return diag;
     }
 
@@ -99,7 +101,7 @@ public class DiagServiceImpl implements DiagService {
 
         // 3. 调用 JPA save()
         Case savedCase = caseRepository.save(casePojo);
-
+        BeanUtils.copyProperties(savedCase, diag);
         return diag;
 
     }

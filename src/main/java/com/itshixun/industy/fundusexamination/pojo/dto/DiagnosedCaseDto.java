@@ -21,7 +21,7 @@ import java.util.List;
 public class DiagnosedCaseDto {
     //CaseDto
     // 病例信息
-    private String id;
+    private String caseId;
     // 疾病类型
     private Integer diseaseType;
     // 责任医师

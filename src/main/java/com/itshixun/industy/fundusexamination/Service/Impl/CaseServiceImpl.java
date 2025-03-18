@@ -73,7 +73,6 @@ public class CaseServiceImpl implements CaseService {
         CasePojo.setPatientInfo(patient);
         CasePojo.setDiseaseRate(rate);
         CasePojo.setIsDeleted(0);
-        System.out.println(CasePojo);
         return caseRepository.save(CasePojo);
     }
 

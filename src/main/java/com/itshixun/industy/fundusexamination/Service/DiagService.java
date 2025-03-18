@@ -7,10 +7,10 @@ import org.springframework.stereotype.Service;
 public interface DiagService {
     /**
      *  获取诊断信息
-     * @param id
+     * @param caseId
      * @return
      */
-    DiagnosedCaseDto getDiag(String id);
+    DiagnosedCaseDto getDiag(String caseId);
     /**
      * 添加诊断信息
      * @param diag
