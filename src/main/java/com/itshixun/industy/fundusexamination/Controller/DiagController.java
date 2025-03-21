@@ -35,9 +35,9 @@ public class DiagController {
         return ResponseMessage.success(diag);
     }
     // 删除综合诊断信息
-    @DeleteMapping("/{id}")
-    public ResponseMessage<Boolean> deleteDiag(@PathVariable String id) {
-        diagService.deleteDiag(id);
+    @DeleteMapping("/{caseId}")
+    public ResponseMessage<Boolean> deleteDiag(@PathVariable String caseId) {
+        diagService.deleteDiag(caseId);
         return ResponseMessage.success(true);
     }
 }

@@ -123,6 +123,11 @@
             <artifactId>jackson-datatype-jsr310</artifactId>
             <version>2.18.2</version> <!-- 根据Spring Boot版本调整 -->
         </dependency>
+        <!--redis起步依赖-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
 
     </dependencies>
 

@@ -20,7 +20,7 @@ public class CaseContoller {
     @Autowired
     private CaseService caseService;
     //分页查询病例列表
-    @GetMapping
+    @GetMapping("/list")
     public ResponseMessage <PageBean<CaseDto>> getCaseListByPage(
             Integer pageNum,
             Integer pageSize,
@@ -54,6 +54,16 @@ public class CaseContoller {
         caseService.delete(caseId);
         return ResponseMessage.success("删除病例成功");
     }
-
+    //查询单个病例
+    @GetMapping("/simple/{caseId}")
+    public ResponseMessage<CaseDto> getCaseById(String caseId) {
+        Case casePojo = caseService.getCaseById(caseId);
+        if (casePojo == null) {
+            return ResponseMessage.allError(416,"病例不存在");
+        }
+        CaseDto caseDto = new CaseDto();
+        BeanUtils.copyProperties(casePojo,caseDto);
+        return ResponseMessage.success(caseDto);
+    }
 
 }

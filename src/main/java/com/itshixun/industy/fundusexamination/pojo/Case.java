@@ -51,6 +51,9 @@ public class Case {
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "ai_diag_id")
     private AiDiag aiDiag;
+    //一个json格式字段
+    @Column(name = "ai_case_info", columnDefinition = "JSON") // MySQL专用语法
+    private String aiCaseInfo;
     //医生诊断
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "nor_diag_id")

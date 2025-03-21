@@ -4,6 +4,7 @@ import com.itshixun.industy.fundusexamination.Service.PreImageService;
 import com.itshixun.industy.fundusexamination.Utils.AliOssUtil;
 import com.itshixun.industy.fundusexamination.pojo.Case;
 import com.itshixun.industy.fundusexamination.pojo.dto.CaseDto;
+import com.itshixun.industy.fundusexamination.pojo.httpEnity.DrugRecommendation;
 import com.itshixun.industy.fundusexamination.pojo.httpEnity.ResponseData;
 import com.itshixun.industy.fundusexamination.repository.CaseRepository;
 import com.itshixun.industy.fundusexamination.repository.PreImageRepository;
@@ -13,9 +14,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class PreImageServiceImpl implements PreImageService {
@@ -33,23 +37,41 @@ public class PreImageServiceImpl implements PreImageService {
         String apiUrl = "http://algorithm-service/api/process";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        //赋值
-        String leftKey = caseId + "_Left";
-        String rightKey = caseId + "_Right";
         //
         Map<String, String> requestBody = new HashMap<>();
-        requestBody.put(leftKey, urlLeft);
-        requestBody.put(rightKey, urlRight);
+        requestBody.put("urlLeft", urlLeft);
+        requestBody.put("urlRight", urlRight);
         //发送请求体
-        ResponseEntity<String> response = restTemplate.postForEntity(
-                apiUrl,
-                requestBody,
-                String.class
-        );
-        String r = (String) response.getBody();
-        return new ResponseData(r,200);
+//        ResponseEntity<String> response = restTemplate.postForEntity(
+//                apiUrl,
+//                requestBody,
+//                String.class
+//        );
+//
+        //获取返回结果
+//        String r = response.getBody();
+        // 硬编码模拟响应
+        String mockResponse = "{"
+                + "\"success\": true, "
+                + "\"message\": {"
+                + "\"predictions\": {\"D\": 0.85},"
+                + "\"left_heatmap_url\": \"/mock/left.jpg\","
+                + "\"right_heatmap_url\": \"/mock/right.jpg\","
+                + "\"suggestions\": [\"模拟建议1\", \"模拟建议2\"],"
+                + "\"drags\": [{\"function\":\"模拟功能\",\"drag\":[\"d模拟\"]}]"
+                + "}}";
+        //将所有属性保存到case里面
+        return new ResponseData(mockResponse,true);
     }
 
+    /**已经弃用
+     * @status 弃用
+     * @param originalFileName1
+     * @param originalFileName2
+     * @param fileLeft
+     * @param fileRight
+     * @return
+     */
     @Override
     public Map<String, String> saveOSS(String originalFileName1, String originalFileName2,InputStream fileLeft,
                                        InputStream fileRight) {
@@ -70,5 +92,25 @@ public class PreImageServiceImpl implements PreImageService {
         url.put("urlLeft",urlLeft);
         url.put("urlRight",urlRight);
         return url;
+    }
+    @Override
+    public Map<String, List<MultipartFile>> pattern(MultipartFile[] files) {
+        Map<String, List<MultipartFile>> fileGroups = new HashMap<>();
+        Pattern pattern = Pattern.compile("^([a-zA-Z0-9_]+)_(left|right)\\.\\w+$");
+
+        for (MultipartFile file : files) {
+            String fileName = file.getOriginalFilename();
+            System.out.println(fileName);
+            Matcher matcher = pattern.matcher(fileName);
+            if (!matcher.matches()) {
+                throw new IllegalArgumentException("Invalid filename format: " + fileName);
+            }
+
+            String patientId = matcher.group(1);
+            String type = matcher.group(2);
+            fileGroups.computeIfAbsent(patientId, k -> new ArrayList<>()).add(file);
+        }
+
+        return fileGroups;
     }
 }

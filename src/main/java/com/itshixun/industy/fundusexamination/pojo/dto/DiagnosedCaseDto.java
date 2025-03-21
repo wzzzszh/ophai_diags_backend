@@ -2,6 +2,7 @@
 package com.itshixun.industy.fundusexamination.pojo.dto;
 
 import com.itshixun.industy.fundusexamination.pojo.*;
+import io.micrometer.common.lang.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,7 +31,8 @@ public class DiagnosedCaseDto {
     private Integer diagStatus;
     // 原始图片
     private OriginImageData originImageData;
-    // 处理后的图片
+    // 处理后的图片（xxxx）
+    @Nullable
     private PreImageData preImageData;
     // 疾病概率
     private DiseaseRate diseaseRate;

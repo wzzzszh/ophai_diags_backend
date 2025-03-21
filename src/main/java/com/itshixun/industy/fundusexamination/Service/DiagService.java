@@ -26,7 +26,7 @@ public interface DiagService {
 
     /**
      *  删除诊断信息
-     * @param id
+     * @param caseId
      */
-    void deleteDiag(String id);
+    void deleteDiag(String caseId);
 }

@@ -38,4 +38,12 @@ public interface CaseService {
      * @param caseId
      */
     void delete(String caseId);
+    /**
+     * 根据id查询患者
+     * @param patientId
+     * @return
+     */
+    boolean isPatientExist(String patientId);
+
+    Case getCaseById(String caseId);
 }

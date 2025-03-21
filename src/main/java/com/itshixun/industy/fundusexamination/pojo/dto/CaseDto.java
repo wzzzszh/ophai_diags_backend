@@ -3,7 +3,7 @@ package com.itshixun.industy.fundusexamination.pojo.dto;
 
 
 import com.itshixun.industy.fundusexamination.pojo.*;
-import jakarta.persistence.Column;
+import jakarta.annotation.Nullable;
 import lombok.Data;
 
 /**
@@ -16,6 +16,8 @@ import lombok.Data;
 public class CaseDto {
     // 病例信息
     private String caseId;
+    //ai诊断
+    private String aiCaseInfo;
     //疾病类型
     private Integer diseaseType;
     //责任医师
@@ -27,9 +29,12 @@ public class CaseDto {
     //原始图片
     private OriginImageData originImageData;
     //处理后的图片
+    @Nullable
     private PreImageData preImageData;
     //疾病概率
     private DiseaseRate diseaseRate;
+    //删除字段
+    private Integer isDeleted;
 
 
 }

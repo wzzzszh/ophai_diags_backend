@@ -12,6 +12,8 @@ import org.springframework.stereotype.Repository;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.domain.Page;
 
+import java.util.Optional;
+
 @Repository
 public interface CaseRepository extends CrudRepository<Case, String>, JpaRepository<Case, String> {
     /**
@@ -41,4 +43,14 @@ public interface CaseRepository extends CrudRepository<Case, String>, JpaReposit
     @Transactional
     @Query("UPDATE Case c SET c.isDeleted = 1 WHERE c.caseId = :caseId")
     void updateById(@Param("caseId") String caseId);
+    /**
+     * 根据查询单个病例
+     * @param caseId
+     * @return
+     */
+    // 修改前（缺少事务注解）
+    // @Transactional
+    @Transactional
+    @Query("SELECT c FROM Case c WHERE c.caseId = :caseId AND c.isDeleted = 0")
+    Optional<Case> selectById(@Param("caseId") String caseId);
 }

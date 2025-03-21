@@ -8,5 +8,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ResponseData {
     private String message;   // 业务响应内容
-    private int status;       // HTTP状态码（例如200/400）
+    private Boolean success;       // HTTP状态码（例如200/400）
 }

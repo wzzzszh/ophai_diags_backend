@@ -16,17 +16,20 @@ public class UserDto {
     private String userId;
     // 用户名
     @NotBlank(message = "用户名不能为空")
+    @Pattern(regexp = "^[\\u4e00-\\u9fa5·•]{2,}$",
+            message = "用户名格式应为某某某，例如：张三")
+    @Length(min = 2, max = 20,message = "用户名长度不能少于2位")
     private String userName;
     // SHA256加密密码
     @NotBlank(message = "密码不能为空")
     @Length(min = 6, max = 14,message = "密码长度不能少于6位")
-    @Pattern(regexp = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)[A-Za-z\\d]{6,14}$",
+    @Pattern(regexp = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)[\\w!@#$%^&*()_+\\-=\\[\\]{};':\",.<>/?]{6,16}$",
             message = "密码必须包含大小写字母和数字，不可包含空格")
     private String passwordHash;
     // 确认密码（仅用于注册/修改密码时校验，不存储）
     @NotBlank(message = "确认密码不能为空")
     @Size(min = 6, max = 14, message = "密码长度必须在6到14位之间")
-    @Pattern(regexp = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)[A-Za-z\\d]{6,14}$",
+    @Pattern(regexp = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)[\\w!@#$%^&*()_+\\-=\\[\\]{};':\",.<>/?]{6,16}$",
             message = "密码必须包含大小写字母和数字，不可包含空格")
     private String confirmPassword;
     // 身份证号
@@ -47,6 +50,8 @@ public class UserDto {
             message = "手机号格式不正确，需以1开头且第二位为3-9")
     private String phone;
     // 真实姓名
+    @Pattern(regexp = "^[\\u4e00-\\u9fa5·•]{2,16}$",
+            message = "请输入有效的中文姓名（2-16个汉字，可包含间隔号）")
     private String realName;
     // 性别
     // 0: 男

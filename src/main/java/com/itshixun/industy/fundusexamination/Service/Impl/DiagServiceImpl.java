@@ -107,7 +107,7 @@ public class DiagServiceImpl implements DiagService {
     }
 
     @Override
-    public void deleteDiag(String id) {
-        caseRepository.updateById(id);
+    public void deleteDiag(String caseId) {
+        caseRepository.updateById(caseId);
     }
 }

@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -108,11 +109,7 @@ public class CaseServiceImpl implements CaseService {
 
     @Override
     public CaseDto update(CaseDto caseDto) {
-        // 如果DiseaseRate是新对象（无ID），先保存它
-        DiseaseRate rate = caseDto.getDiseaseRate();
-        if (rate != null && rate.getDiseaseRateId() == null) {
-            diseaseRateRepository.save(rate);
-        }
+
         // 如果OriginImageData是新对象（无ID），先保存它
         OriginImageData origin = caseDto.getOriginImageData();
         if (origin != null && origin.getImageId() == null) {
@@ -130,6 +127,7 @@ public class CaseServiceImpl implements CaseService {
         }
         Case up = new Case();
         BeanUtils.copyProperties(caseDto, up);
+        System.out.println(up.toString());
         caseRepository.save(up);
         BeanUtils.copyProperties(up, caseDto);
         return caseDto;
@@ -139,6 +137,22 @@ public class CaseServiceImpl implements CaseService {
     public void delete(String caseId) {
         Case del = new Case();
         caseRepository.updateById(caseId);
+    }
+
+    @Override
+    public boolean isPatientExist(String patientId) {
+        Optional<PatientInfo> byId = patientInfoRepository.findById(patientId);
+        return byId.isPresent();
+
+    }
+
+    @Override
+    public Case getCaseById(String caseId) {
+        // 使用orElseThrow处理Optional
+        Case aCase1 = caseRepository.selectById(caseId)
+                .orElseThrow(() -> new RuntimeException("病例不存在 ID：" + caseId));
+        System.out.println("查询的case实体在这里" + aCase1.toString());
+        return aCase1;
     }
 
     private PageBean<CaseDto> convertToPageBean(Page<Case> casePage) {
@@ -159,5 +173,6 @@ public class CaseServiceImpl implements CaseService {
         return dto;
     }
 }
+
 
 
