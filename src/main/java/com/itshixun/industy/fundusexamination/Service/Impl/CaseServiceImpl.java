@@ -38,18 +38,27 @@ public class CaseServiceImpl implements CaseService {
             PatientInfo patient = new PatientInfo();
         // 1. 保存 OriginImageData
         if(caseDto.getOriginImageData()!=null){
+            if(caseDto.getOriginImageData().getImageId()!=null){
+                origin.setImageId(caseDto.getOriginImageData().getImageId());
+            }
             origin.setLeftImage(caseDto.getOriginImageData().getLeftImage());
             origin.setRightImage(caseDto.getOriginImageData().getRightImage());
             oriRepository.save(origin);
         }
         // 2. 保存 PreImageData
         if(caseDto.getPreImageData()!=null){
+            if(caseDto.getPreImageData().getImageId()!=null){
+                pre.setImageId(caseDto.getPreImageData().getImageId());
+            }
             pre.setLeftImage(caseDto.getPreImageData().getLeftImage());
             pre.setRightImage(caseDto.getPreImageData().getRightImage());
             preImageRepository.save(pre);
         }
         //3. 保存 diseaseRate
         if(caseDto.getDiseaseRate()!=null){
+            if(caseDto.getDiseaseRate().getDiseaseRateId()!=null){
+                rate.setDiseaseRateId(caseDto.getDiseaseRate().getDiseaseRateId());
+            }
             rate.setaRate(caseDto.getDiseaseRate().getaRate());
             rate.setdRate(caseDto.getDiseaseRate().getaRate());
             rate.setgRate(caseDto.getDiseaseRate().getaRate());
@@ -61,6 +70,9 @@ public class CaseServiceImpl implements CaseService {
         }
         //4. 保存 patientInfo
         if(caseDto.getPatientInfo()!=null){
+            if(caseDto.getPatientInfo().getPatientId()!=null){
+                patient = patientInfoRepository.findById(caseDto.getPatientInfo().getPatientId()).get();
+            }
             patient.setName(caseDto.getPatientInfo().getName());
             patient.setGender(caseDto.getPatientInfo().getGender());
             patient.setAge(caseDto.getPatientInfo().getAge());

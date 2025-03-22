@@ -6,6 +6,8 @@ import com.itshixun.industy.fundusexamination.pojo.*;
 import jakarta.annotation.Nullable;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 /**
  * @author 10169
  * @Description 导入病例模块
@@ -35,6 +37,9 @@ public class CaseDto {
     private DiseaseRate diseaseRate;
     //删除字段
     private Integer isDeleted;
-
+    //创建时间
+    private LocalDateTime createDate;
+    //更新时间
+    private LocalDateTime updateDate;
 
 }

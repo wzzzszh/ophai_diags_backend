@@ -58,7 +58,7 @@ UserController {
             return ResponseMessage.success(token);
         }
         System.out.println("登陆出现未知错误");
-        return ResponseMessage.allError(412,"登陆出现未知错误");
+        return ResponseMessage.allError(412,"密码不正确");
     }
     //查询
     @GetMapping("/sellect/{userId}")

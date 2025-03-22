@@ -102,12 +102,16 @@ public class PreImageController {
             CaseDto caseDto = new CaseDto();
             PatientInfo patientInfo = new PatientInfo();
             patientInfo.setPatientId(patientId);
+//            System.out.println("????))))))))IIDD"+patientId);
             caseDto.setPatientInfo(patientInfo);
+            System.out.println("????))))))))IIDD" + caseDto.getPatientInfo());
             // 新增初始化代码（关键修复）
             caseDto.setOriginImageData(new OriginImageData());
             caseDto.setDiagStatus(0);
             Case caseNew = caseService.add(caseDto);
+            System.out.println("????))))))))IIDD" + caseNew.getPatientInfo());
             BeanUtils.copyProperties(caseNew, caseDto);
+            System.out.println("????))))))))IIDD" + caseDto.getPatientInfo());
             String caseId = caseNew.getCaseId();
             // 初始化图片URL
             String urlLeft = null;
