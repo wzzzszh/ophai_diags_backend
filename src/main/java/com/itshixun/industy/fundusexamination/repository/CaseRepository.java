@@ -2,6 +2,7 @@ package com.itshixun.industy.fundusexamination.repository;
 
 //import com.github.pagehelper.Page;
 import com.itshixun.industy.fundusexamination.pojo.Case;
+import com.itshixun.industy.fundusexamination.pojo.PatientInfo;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -27,7 +28,7 @@ public interface CaseRepository extends CrudRepository<Case, String>, JpaReposit
     @Query("SELECT c FROM Case c " +
             "WHERE (:diagStatus IS NULL OR c.diagStatus = :diagStatus) " +
             "AND (:diseaseType IS NULL OR c.diseaseType = :diseaseType) " +
-            "AND (:patientInfoPatientId IS NUll OR c.patientInfo.patientId = :patientInfoPatientId)"+
+            "AND (:patientInfoPatientId IS NULL OR c.patientInfo.patientId = :patientInfoPatientId)"+
             "AND c.isDeleted = 0")
     Page<Case> list(@Param("diagStatus") Integer diagStatus,
                     @Param("diseaseType") Integer diseaseType,
@@ -53,4 +54,24 @@ public interface CaseRepository extends CrudRepository<Case, String>, JpaReposit
     @Transactional
     @Query("SELECT c FROM Case c WHERE c.caseId = :caseId AND c.isDeleted = 0")
     Optional<Case> selectById(@Param("caseId") String caseId);
+
+    // 在Repository接口中添加
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Case c SET c.normalDiag = :normalDiag WHERE c.caseId = :caseId")
+    void updateNormalDiag(@Param("caseId") String caseId, @Param("normalDiag") String normalDiag);
+
+
+    /**
+     * 根据患者信息查询
+     * @param patientInfoPatientId
+     * @return
+     */
+//    @Query("SELECT c FROM Case c " +
+//            "WHERE (c.patientInfo.patientId = :patientInfoPatientId)"+
+//            "AND c.isDeleted = 0")
+    @Query
+            ("select c from Case c where c.patientInfo.patientId = :patientInfoPatientId and c.isDeleted = 0")
+    Page<Case>  findByPatientInfoPatientId(
+            @Param("patientInfoPatientId")String patientInfoPatientId,
+            Pageable pageable);
 }

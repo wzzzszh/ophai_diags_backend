@@ -34,7 +34,8 @@ public class PreImageServiceImpl implements PreImageService {
 
     @Override
     public ResponseData sendUrltoP(String caseId, String urlLeft, String urlRight) {
-        String apiUrl = "http://algorithm-service/api/process";
+        String apiUrl =
+                "http://127.0.0.1:4523/m1/5970416-5658644-default/api/process-images/";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         //
@@ -42,26 +43,16 @@ public class PreImageServiceImpl implements PreImageService {
         requestBody.put("urlLeft", urlLeft);
         requestBody.put("urlRight", urlRight);
         //发送请求体
-//        ResponseEntity<String> response = restTemplate.postForEntity(
-//                apiUrl,
-//                requestBody,
-//                String.class
-//        );
-//
+        ResponseEntity<String> response = restTemplate.postForEntity(
+                apiUrl,
+                requestBody,
+                String.class
+        );
+
         //获取返回结果
-//        String r = response.getBody();
-        // 硬编码模拟响应
-        String mockResponse = "{"
-                + "\"success\": true, "
-                + "\"message\": {"
-                + "\"predictions\": {\"D\": 0.85},"
-                + "\"left_heatmap_url\": \"/mock/left.jpg\","
-                + "\"right_heatmap_url\": \"/mock/right.jpg\","
-                + "\"suggestions\": [\"模拟建议1\", \"模拟建议2\"],"
-                + "\"drags\": [{\"function\":\"模拟功能\",\"drag\":[\"d模拟\"]}]"
-                + "}}";
+        String r = response.getBody();
         //将所有属性保存到case里面
-        return new ResponseData(mockResponse,true);
+        return new ResponseData(r,true);
     }
 
     /**已经弃用
@@ -95,22 +86,31 @@ public class PreImageServiceImpl implements PreImageService {
     }
     @Override
     public Map<String, List<MultipartFile>> pattern(MultipartFile[] files) {
+        // 创建存储分组文件的Map，键是患者ID，值是该患者的文件列表
         Map<String, List<MultipartFile>> fileGroups = new HashMap<>();
+        // 定义文件名格式的正则表达式：
+        // ^([a-zA-Z0-9_]+)      患者ID（字母/数字/下划线组成）
+        // _(left|right)         左右眼标识
+        // \.\\w+$               文件扩展名
         Pattern pattern = Pattern.compile("^([a-zA-Z0-9_]+)_(left|right)\\.\\w+$");
 
+        // 遍历文件数组，根据文件名格式进行分组
         for (MultipartFile file : files) {
             String fileName = file.getOriginalFilename();
             System.out.println(fileName);
+            // 用正则表达式匹配文件名格式
             Matcher matcher = pattern.matcher(fileName);
             if (!matcher.matches()) {
                 throw new IllegalArgumentException("Invalid filename format: " + fileName);
             }
-
-            String patientId = matcher.group(1);
-            String type = matcher.group(2);
+            // 提取患者ID和类型，并将文件添加到对应的分组中
+            String patientId = matcher.group(1);// 第1个括号匹配的内容（患者ID）
+            String type = matcher.group(2); // 第2个括号匹配的内容（left/right）
+            // computeIfAbsent：如果不存在该患者ID的键，则创建新ArrayList,如果存在，则返回该键对应的值
             fileGroups.computeIfAbsent(patientId, k -> new ArrayList<>()).add(file);
         }
 
         return fileGroups;
     }
 }
+

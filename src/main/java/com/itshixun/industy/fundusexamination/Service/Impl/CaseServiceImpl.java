@@ -5,7 +5,10 @@ import com.github.pagehelper.PageHelper;
 import com.itshixun.industy.fundusexamination.Service.CaseService;
 import com.itshixun.industy.fundusexamination.pojo.*;
 import com.itshixun.industy.fundusexamination.pojo.dto.CaseDto;
+import com.itshixun.industy.fundusexamination.pojo.dto.CaseLibDto;
+import com.itshixun.industy.fundusexamination.pojo.dto.historyCaseListDto;
 import com.itshixun.industy.fundusexamination.repository.*;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -17,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
+@Transactional
 @Service
 public class CaseServiceImpl implements CaseService {
     @Autowired
@@ -93,7 +96,7 @@ public class CaseServiceImpl implements CaseService {
 
 
     @Override
-    public PageBean<CaseDto> getCaseListByPage(
+    public PageBean<CaseLibDto> getCaseListByPage(
             Integer pageNum, Integer pageSize,
             Integer diagStatus, Integer diseaseType, String patientInfoPatientId
     ) {
@@ -103,19 +106,13 @@ public class CaseServiceImpl implements CaseService {
             throw new IllegalArgumentException("页码和每页数量不能为空");
         }
         Pageable pageable = PageRequest.of(pageNum-1, pageSize);
-        System.out.println(pageable);
 
         // 2. 调用仓库方法时传递 Pageable
         Page<Case> casePage = caseRepository.list(
                 diagStatus, diseaseType, patientInfoPatientId, pageable
         );
-        System.out.println(casePage);
-
-        //3.仓库方法是成功的
-        System.out.println("Total: " + casePage.getTotalElements());
-        System.out.println("Content: " + casePage.getContent());
-        // 4. 转换为 DTO 并封装到 PageBean
-        PageBean<CaseDto> pageBean = convertToPageBean(casePage);
+        // 3. 转换为 DTO 并封装到 PageBean
+        PageBean<CaseLibDto> pageBean = convertToPageBean(casePage);
         return pageBean;
     }
 
@@ -163,12 +160,38 @@ public class CaseServiceImpl implements CaseService {
         // 使用orElseThrow处理Optional
         Case aCase1 = caseRepository.selectById(caseId)
                 .orElseThrow(() -> new RuntimeException("病例不存在 ID：" + caseId));
-        System.out.println("查询的case实体在这里" + aCase1.toString());
+
         return aCase1;
     }
 
-    private PageBean<CaseDto> convertToPageBean(Page<Case> casePage) {
-        PageBean<CaseDto> pb = new PageBean<>();
+    @Override
+    public CaseDto updateNorDiag(CaseDto caseDto) {
+        String caseId = caseDto.getCaseId();
+        // 验证病例是否存在
+        caseRepository.findById(caseId)
+                .orElseThrow(() -> new RuntimeException("病例不存在 ID：" + caseId));
+
+        // 直接调用自定义更新方法
+        caseRepository.updateNormalDiag(caseId, caseDto.getNormalDiag());
+        return caseDto;
+    }
+
+    /**
+     * 根据患者id查询所有病例
+     * @param patientId
+     * @return
+     */
+    @Override
+    public PageBean<historyCaseListDto> getHistoryCaseListByPage(String patientId) {
+        Pageable pageable = PageRequest.of(0, 100);
+        Page<Case> casePage = caseRepository.findByPatientInfoPatientId(patientId,pageable);
+        // 3. 转换为 DTO 并封装到 PageBean
+        PageBean<historyCaseListDto> pageBean = convertTohisPageBean(casePage);
+                return pageBean;
+    }
+
+    private PageBean<CaseLibDto> convertToPageBean(Page<Case> casePage) {
+        PageBean<CaseLibDto> pb = new PageBean<>();
         pb.setTotal(casePage.getTotalElements()); // 总记录数
         pb.setItems(
                 casePage.getContent() // 当前页数据
@@ -179,9 +202,28 @@ public class CaseServiceImpl implements CaseService {
         return pb;
     }
 
-    private CaseDto convertToDto(Case caseEntity) {
-        CaseDto dto = new CaseDto();
+    private CaseLibDto convertToDto(Case caseEntity) {
+        CaseLibDto dto = new CaseLibDto();
         BeanUtils.copyProperties(caseEntity, dto);
+        System.out.println(dto.toString());
+        return dto;
+    }
+    private PageBean<historyCaseListDto> convertTohisPageBean(Page<Case> casePage) {
+        PageBean<historyCaseListDto> pb = new PageBean<>();
+        pb.setTotal(casePage.getTotalElements()); // 总记录数
+        pb.setItems(
+                casePage.getContent() // 当前页数据
+                        .stream()
+                        .map(this::convertToHistoryDto) // 转换为 DTO
+                        .collect(Collectors.toList())
+        );
+        return pb;
+    }
+
+    private historyCaseListDto convertToHistoryDto(Case caseEntity) {
+        historyCaseListDto dto = new historyCaseListDto();
+        BeanUtils.copyProperties(caseEntity, dto);
+        System.out.println(dto.toString());
         return dto;
     }
 }

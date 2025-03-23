@@ -83,7 +83,7 @@ public class DiagServiceImpl implements DiagService {
         Case CasePojo = new Case();
         BeanUtils.copyProperties(diag, CasePojo);
         CasePojo.setAiDiag(aiDiag);
-        CasePojo.setNormalDiag(nDiag);
+//        CasePojo.setNormalDiag(nDiag);
         CasePojo.setPatientInfo(patient);
         CasePojo.setDiseaseRate(rate);
         caseRepository.save(CasePojo);

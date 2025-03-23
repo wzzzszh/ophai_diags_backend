@@ -4,6 +4,8 @@ import com.itshixun.industy.fundusexamination.pojo.Case;
 import com.itshixun.industy.fundusexamination.pojo.PageBean;
 import com.itshixun.industy.fundusexamination.pojo.User;
 import com.itshixun.industy.fundusexamination.pojo.dto.CaseDto;
+import com.itshixun.industy.fundusexamination.pojo.dto.CaseLibDto;
+import com.itshixun.industy.fundusexamination.pojo.dto.historyCaseListDto;
 
 import java.util.List;
 
@@ -24,7 +26,11 @@ public interface CaseService {
      * @param patientInfoPatientId
      * @return
      */
-    PageBean<CaseDto> getCaseListByPage(Integer pageNum, Integer pageSize, Integer diagStatus, Integer diseaseType, String patientInfoPatientId);
+    PageBean<CaseLibDto> getCaseListByPage(Integer pageNum,
+                                           Integer pageSize,
+                                           Integer diagStatus,
+                                           Integer diseaseType,
+                                           String patientInfoPatientId);
 
     /**
      * 更新病例数据
@@ -46,4 +52,8 @@ public interface CaseService {
     boolean isPatientExist(String patientId);
 
     Case getCaseById(String caseId);
+
+    CaseDto updateNorDiag(CaseDto caseDto);
+
+    PageBean<historyCaseListDto> getHistoryCaseListByPage(String patientId);
 }

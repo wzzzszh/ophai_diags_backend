@@ -2,12 +2,12 @@
 package com.itshixun.industy.fundusexamination.pojo;
 
 
+
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
-
 import java.sql.Date;
 import java.time.LocalDateTime;
 
@@ -57,7 +57,10 @@ public class Case {
     //医生诊断
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "nor_diag_id")
-    private NormalDiag normalDiag;
+    private NormalDiag doctorDiag;
+    //医生诊断
+    @Column(name = "normal_diag")
+    private String normalDiag;
     //责任医师（111）外键
     @Column(name = "responsible_doctor")
     private String responsibleDoctor;

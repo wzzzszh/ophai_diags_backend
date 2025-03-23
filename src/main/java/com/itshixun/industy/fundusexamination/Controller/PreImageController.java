@@ -84,7 +84,7 @@ public class PreImageController {
     }
     @PostMapping("/saveAndProcess")
     public ResponseMessage<ResponseData> savePreAndProcess(MultipartFile[] files)throws Exception{
-        //1.参数验证
+        //1.参数验证，用map来接收所有的文件
         Map<String, List<MultipartFile>> mapFiles = preImageService.pattern(files);
         //2.循环接收mapFiles
         //迭代mapFiles
@@ -102,16 +102,13 @@ public class PreImageController {
             CaseDto caseDto = new CaseDto();
             PatientInfo patientInfo = new PatientInfo();
             patientInfo.setPatientId(patientId);
-//            System.out.println("????))))))))IIDD"+patientId);
             caseDto.setPatientInfo(patientInfo);
-            System.out.println("????))))))))IIDD" + caseDto.getPatientInfo());
-            // 新增初始化代码（关键修复）
             caseDto.setOriginImageData(new OriginImageData());
             caseDto.setDiagStatus(0);
             Case caseNew = caseService.add(caseDto);
-            System.out.println("????))))))))IIDD" + caseNew.getPatientInfo());
+            //把caseId赋值到dto
             BeanUtils.copyProperties(caseNew, caseDto);
-            System.out.println("????))))))))IIDD" + caseDto.getPatientInfo());
+
             String caseId = caseNew.getCaseId();
             // 初始化图片URL
             String urlLeft = null;
@@ -147,15 +144,14 @@ public class PreImageController {
             // 保存图片URL到病例
             caseDto.getOriginImageData().setLeftImage(urlLeft);
             caseDto.getOriginImageData().setRightImage(urlRight);
-            //发送到算法端
+            //改名后的文件发送到算法端
             ResponseData responseData = preImageService.sendUrltoP(caseId, urlLeft, urlRight);
             String fullJson = responseData.getMessage();
             //判断是否有图片
-            if (urlLeft == null || urlRight == null) {
+            if (!responseData.getSuccess()) {
                 // 处理没有图片的情况
-                caseNew.setDiagStatus(0);
-                caseService.update(caseDto);
-                continue;
+                caseNew.setDiagStatus(2);
+                return ResponseMessage.allError(417,"ai诊断失败!!!请联系管理员");
             }
             // 直接存入case_info字段
             caseDto.setAiCaseInfo(fullJson);
@@ -169,8 +165,6 @@ public class PreImageController {
             //设置正确诊断状态
             caseDto.setDiagStatus(1);
             caseService.update(caseDto);
-
-
         }
 
         return ResponseMessage.success("保存病例成功，请前往诊断页面");
