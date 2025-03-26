@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -34,6 +35,12 @@ public class CaseContoller {
             @RequestParam(required = false) String[] diseaseName,
             @RequestParam(required = false) String patientInfoPatientId
     ) {
+        // 新增参数处理逻辑
+        if (diseaseName != null && diseaseName.length > 0 && "-1".equals(diseaseName[0])) {
+            diseaseName = null;
+        }
+
+        System.out.println("处理后的疾病名称参数：" + Arrays.toString(diseaseName));
         PageBean<CaseLibDto> pb = caseService.getCaseListByPage(pageNum,pageSize,diagStatus,diseaseName,patientInfoPatientId);
         return ResponseMessage.success(pb);
     }

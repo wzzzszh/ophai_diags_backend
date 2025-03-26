@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -81,6 +82,7 @@ public class CaseServiceImpl implements CaseService {
             Integer pageNum, Integer pageSize,
             Integer diagStatus, String[] diseaseName, String patientInfoPatientId
     ) {
+
         //如果diagStatus，diseaseType，patientInfoPatientId为-1，则设置成NULL
         if (diagStatus != null && diagStatus == -1) {
             diagStatus = null;
@@ -102,11 +104,18 @@ public class CaseServiceImpl implements CaseService {
         String diseaseNameJson = null;
         try {
             ObjectMapper objectMapper = new ObjectMapper();
+            // 移除元素中的双引号（如果前端已经携带）
+            if(diseaseName != null) {
+                diseaseName = Arrays.stream(diseaseName)
+                        .map(s -> s.replace("\"", "")) // 新增：去除每个疾病名称的双引号
+                        .toArray(String[]::new);
+            }
             diseaseNameJson = diseaseName != null ?
                     objectMapper.writeValueAsString(diseaseName) : null;
         } catch (JsonProcessingException e) {
             throw new IllegalArgumentException("疾病名称数组转换失败", e);
         }
+        System.out.println("realselect"+diseaseNameJson);
         // 2. 调用仓库方法时传递 Pageable
         Page<Case> casePage = caseRepository.list(
                 diagStatus, diseaseNameJson, patientInfoPatientId, pageable
