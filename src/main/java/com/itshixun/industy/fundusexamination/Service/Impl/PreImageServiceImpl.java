@@ -3,10 +3,12 @@ package com.itshixun.industy.fundusexamination.Service.Impl;
 import com.itshixun.industy.fundusexamination.Service.PreImageService;
 import com.itshixun.industy.fundusexamination.Utils.AliOssUtil;
 import com.itshixun.industy.fundusexamination.pojo.Case;
+import com.itshixun.industy.fundusexamination.pojo.PatientInfo;
 import com.itshixun.industy.fundusexamination.pojo.dto.CaseDto;
 import com.itshixun.industy.fundusexamination.pojo.httpEnity.DrugRecommendation;
 import com.itshixun.industy.fundusexamination.pojo.httpEnity.ResponseData;
 import com.itshixun.industy.fundusexamination.repository.CaseRepository;
+import com.itshixun.industy.fundusexamination.repository.PatientInfoRepository;
 import com.itshixun.industy.fundusexamination.repository.PreImageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -25,6 +27,8 @@ import java.util.regex.Pattern;
 public class PreImageServiceImpl implements PreImageService {
     @Autowired
     private PreImageRepository preImageRepository;
+    @Autowired
+    private PatientInfoRepository patientInfoRepository;
     @Autowired
     private RestTemplate restTemplate;
     @Override
@@ -111,6 +115,12 @@ public class PreImageServiceImpl implements PreImageService {
         }
 
         return fileGroups;
+    }
+
+    @Override
+    public PatientInfo selectPatientInfo(String patientId) {
+        return patientInfoRepository.findById(patientId)
+                .orElseThrow(() -> new RuntimeException("患者信息不存在 ID：" + patientId));
     }
 }
 

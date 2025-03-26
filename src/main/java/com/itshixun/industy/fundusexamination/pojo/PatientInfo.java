@@ -2,6 +2,7 @@ package com.itshixun.industy.fundusexamination.pojo;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -18,6 +19,7 @@ import java.util.Date;
 @Data
 @Table(name =  "patient_info")
 @Entity
+@ToString(exclude = "cases")
 public class PatientInfo {
     @Id
     @GeneratedValue(
@@ -38,7 +40,7 @@ public class PatientInfo {
     private Integer age;
     //患者性别
     @Column(name = "patient_gender")
-    private String gender;
+    private Integer gender;
     //创建时间
     @Column(name = "create_date")
     @CreationTimestamp

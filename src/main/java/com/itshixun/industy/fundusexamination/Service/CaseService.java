@@ -1,6 +1,7 @@
 package com.itshixun.industy.fundusexamination.Service;
 
 import com.itshixun.industy.fundusexamination.pojo.Case;
+import com.itshixun.industy.fundusexamination.pojo.NormalDiag;
 import com.itshixun.industy.fundusexamination.pojo.PageBean;
 import com.itshixun.industy.fundusexamination.pojo.User;
 import com.itshixun.industy.fundusexamination.pojo.dto.CaseDto;
@@ -22,14 +23,14 @@ public interface CaseService {
      * @param pageNum
      * @param pageSize
      * @param diagStatus
-     * @param diseaseType
+     * @param diseaseName
      * @param patientInfoPatientId
      * @return
      */
     PageBean<CaseLibDto> getCaseListByPage(Integer pageNum,
                                            Integer pageSize,
                                            Integer diagStatus,
-                                           Integer diseaseType,
+                                           String[] diseaseName,
                                            String patientInfoPatientId);
 
     /**
@@ -56,4 +57,6 @@ public interface CaseService {
     CaseDto updateNorDiag(CaseDto caseDto);
 
     PageBean<historyCaseListDto> getHistoryCaseListByPage(String patientId);
+
+    List<Object[]> getNormalDiagByCaseId(String caseId);
 }

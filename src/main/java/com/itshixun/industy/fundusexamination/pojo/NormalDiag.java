@@ -2,6 +2,7 @@ package com.itshixun.industy.fundusexamination.pojo;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -18,6 +19,7 @@ import java.util.List;
 @Data
 @Entity
 @Table(name = "normal_diag")
+@ToString(exclude = "caseEntity")
 public class NormalDiag {
     // 主键
     @Id
@@ -30,26 +32,15 @@ public class NormalDiag {
     )
     @Column(name = "diag_id")
     private String nDiagId;
-
-    // 更新日期
-//    private Date date;
-
     // 医生姓名
     @Column(name = "doctor_name")
     private String doctorName;
-
-    // 所属机构
-    @Column(name = "department")
-    private String department;
-
-    // 医生建议（使用方案一映射）
-    @ElementCollection // 声明基础类型集合
-    @CollectionTable(
-            name = "normal_diag_suggestions", // 关联表名称
-            joinColumns = @JoinColumn(name = "diag_id") // 主表关联字段
-    )
-    @Column(name = "suggestion") // 单条建议的列名
-    private List<String> DocSuggestions;
+    // 新增对Case的反向关联
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "case_id")
+    private Case caseEntity;
+    @Column(name = "doc_suggestions")
+    private String docSuggestions;
 
     //创建时间
     @Column(name = "create_date")
@@ -63,4 +54,12 @@ public class NormalDiag {
     @UpdateTimestamp
     private LocalDateTime updateDate;
 
+    @Override
+    public String toString() {
+        return "NormalDiag{" +
+                "nDiagId='" + nDiagId + '\'' +
+                ", doctorName='" + doctorName + '\'' +
+                ", docSuggestions='" + docSuggestions + '\'' +
+                '}';
+    }
 }

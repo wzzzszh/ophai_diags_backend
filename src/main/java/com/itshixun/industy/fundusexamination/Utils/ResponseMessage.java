@@ -16,6 +16,9 @@ public class ResponseMessage<T> {
     public static <T> ResponseMessage<T> loginerror() {
         throw new BusinessException(401,"登录认证失败");
     }
+    public static <T> ResponseMessage<T> loginRediserror() {
+        throw new BusinessException(4012,"redis登录认证失败");
+    }
     public static <T>ResponseMessage<T> allError(Integer code, String message) {
         throw new BusinessException(code,message);
     }

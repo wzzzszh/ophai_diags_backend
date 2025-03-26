@@ -2,6 +2,7 @@ package com.itshixun.industy.fundusexamination.repository;
 
 //import com.github.pagehelper.Page;
 import com.itshixun.industy.fundusexamination.pojo.Case;
+import com.itshixun.industy.fundusexamination.pojo.NormalDiag;
 import com.itshixun.industy.fundusexamination.pojo.PatientInfo;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Pageable;
@@ -13,25 +14,27 @@ import org.springframework.stereotype.Repository;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.domain.Page;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface CaseRepository extends CrudRepository<Case, String>, JpaRepository<Case, String> {
+public interface CaseRepository extends JpaRepository<Case, String> {
+
     /**
      * 条件分页查询
      * @param diagStatus
-     * @param diseaseType
+     * @param diseaseNameJson
      * @param patientInfoPatientId
      * @param pageable
      * @return
      */
     @Query("SELECT c FROM Case c " +
             "WHERE (:diagStatus IS NULL OR c.diagStatus = :diagStatus) " +
-            "AND (:diseaseType IS NULL OR c.diseaseType = :diseaseType) " +
+            "AND (:diseaseNameJson IS NULL OR c.diseaseNameJson = :diseaseNameJson) " +
             "AND (:patientInfoPatientId IS NULL OR c.patientInfo.patientId = :patientInfoPatientId)"+
             "AND c.isDeleted = 0")
     Page<Case> list(@Param("diagStatus") Integer diagStatus,
-                    @Param("diseaseType") Integer diseaseType,
+                    @Param("diseaseNameJson") String diseaseNameJson,
                     @Param("patientInfoPatientId") String patientInfoPatientId,
                     Pageable pageable
     );
@@ -55,10 +58,6 @@ public interface CaseRepository extends CrudRepository<Case, String>, JpaReposit
     @Query("SELECT c FROM Case c WHERE c.caseId = :caseId AND c.isDeleted = 0")
     Optional<Case> selectById(@Param("caseId") String caseId);
 
-    // 在Repository接口中添加
-    @Modifying(clearAutomatically = true)
-    @Query("UPDATE Case c SET c.normalDiag = :normalDiag WHERE c.caseId = :caseId")
-    void updateNormalDiag(@Param("caseId") String caseId, @Param("normalDiag") String normalDiag);
 
 
     /**

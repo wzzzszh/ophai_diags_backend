@@ -3,13 +3,17 @@ package com.itshixun.industy.fundusexamination.pojo.dto;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.itshixun.industy.fundusexamination.pojo.*;
-import jakarta.annotation.Nullable;
+
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
- * @description 查询单个病例Dto
+ *
+ * 查询单个病例Dto
+ *
+ * @author 10169
  */
 @Data
 
@@ -18,8 +22,12 @@ public class JcaseDto {
     private String caseId;
     //jsonAi诊断
     private JsonNode aiCaseInfoJson;
+    //疾病name
+    private String[] diseaseName;
     //历史病例库
     private PageBean<historyCaseListDto> historyCaseListDto;
+    //医生诊断
+    private List<NormalDiagDto> doctorDiags;
     //疾病类型
     private Integer diseaseType;
     //责任医师

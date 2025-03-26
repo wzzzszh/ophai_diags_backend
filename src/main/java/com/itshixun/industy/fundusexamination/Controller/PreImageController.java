@@ -4,10 +4,10 @@ import com.itshixun.industy.fundusexamination.Service.CaseService;
 import com.itshixun.industy.fundusexamination.Service.PreImageService;
 import com.itshixun.industy.fundusexamination.Utils.AliOssUtil;
 import com.itshixun.industy.fundusexamination.Utils.ResponseMessage;
+import com.itshixun.industy.fundusexamination.Utils.ThreadLocalUtil;
 import com.itshixun.industy.fundusexamination.pojo.Case;
 import com.itshixun.industy.fundusexamination.pojo.OriginImageData;
 import com.itshixun.industy.fundusexamination.pojo.PatientInfo;
-import com.itshixun.industy.fundusexamination.pojo.PreImageData;
 import com.itshixun.industy.fundusexamination.pojo.dto.CaseDto;
 import com.itshixun.industy.fundusexamination.pojo.httpEnity.ResponseData;
 import org.springframework.beans.BeanUtils;
@@ -15,21 +15,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.lang.reflect.Array;
 import java.util.*;
 
 //保存图片信息并且进行ai诊断
 @RestController
 @RequestMapping("/api/preImage")
 public class PreImageController {
-
-//    @Autowired
-//    private RestTemplate restTemplate;
-
-//    private static final String RECEIVER_API_URL = "http://localhost:8080/receiver/api/data";
     @Autowired
     public CaseService caseService;
     @Autowired
@@ -71,8 +64,8 @@ public class PreImageController {
         //接受算法返回结果
         String info = allInfoFromP.getMessage();
         //保存图片信息还有诊断结果
-        caseDto.getPreImageData().setLeftImage(urlLeft);
-        caseDto.getPreImageData().setRightImage(urlRight);
+        caseDto.getOriginImageData().setLeftImage(urlLeft);
+        caseDto.getOriginImageData().setRightImage(urlRight);
         //更新病例信息
         caseService.add(caseDto);
         CaseDto caseDtoF = new CaseDto();
@@ -100,11 +93,16 @@ public class PreImageController {
 
             //新建case，保存该patientId到该病例的基本信息里面，初始化OriginImage，得到返回的caseId
             CaseDto caseDto = new CaseDto();
+            //设置责任医生的姓名
+            Map<String,Object> map = ThreadLocalUtil.get();
+            String responsibleDoctor = (String) map.get("userName");
             PatientInfo patientInfo = new PatientInfo();
-            patientInfo.setPatientId(patientId);
+            //获取患者信息注入病例
+            patientInfo = preImageService.selectPatientInfo(patientId);
             caseDto.setPatientInfo(patientInfo);
             caseDto.setOriginImageData(new OriginImageData());
             caseDto.setDiagStatus(0);
+            caseDto.setResponsibleDoctor(responsibleDoctor);
             Case caseNew = caseService.add(caseDto);
             //把caseId赋值到dto
             BeanUtils.copyProperties(caseNew, caseDto);

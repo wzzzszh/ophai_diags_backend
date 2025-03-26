@@ -1,6 +1,8 @@
 package com.itshixun.industy.fundusexamination.Service.Impl;
 
 //import com.github.pagehelper.Page;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.pagehelper.PageHelper;
 import com.itshixun.industy.fundusexamination.Service.CaseService;
 import com.itshixun.industy.fundusexamination.pojo.*;
@@ -9,6 +11,7 @@ import com.itshixun.industy.fundusexamination.pojo.dto.CaseLibDto;
 import com.itshixun.industy.fundusexamination.pojo.dto.historyCaseListDto;
 import com.itshixun.industy.fundusexamination.repository.*;
 import jakarta.transaction.Transactional;
+import org.apache.ibatis.jdbc.Null;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -28,16 +31,13 @@ public class CaseServiceImpl implements CaseService {
     @Autowired
     private CaseRepository caseRepository;
     @Autowired
-    private PreRepository preImageRepository;
+    private NormalDiagRepository normalDiagRepository;
     @Autowired
     private PatientInfoRepository patientInfoRepository;
-    @Autowired
-    private DiseaseRateRepository diseaseRateRepository;
     @Override
     public Case add(CaseDto caseDto) {
             OriginImageData origin = new OriginImageData();
-            PreImageData pre = new PreImageData();
-            DiseaseRate rate = new DiseaseRate();
+
             PatientInfo patient = new PatientInfo();
         // 1. 保存 OriginImageData
         if(caseDto.getOriginImageData()!=null){
@@ -48,30 +48,8 @@ public class CaseServiceImpl implements CaseService {
             origin.setRightImage(caseDto.getOriginImageData().getRightImage());
             oriRepository.save(origin);
         }
-        // 2. 保存 PreImageData
-        if(caseDto.getPreImageData()!=null){
-            if(caseDto.getPreImageData().getImageId()!=null){
-                pre.setImageId(caseDto.getPreImageData().getImageId());
-            }
-            pre.setLeftImage(caseDto.getPreImageData().getLeftImage());
-            pre.setRightImage(caseDto.getPreImageData().getRightImage());
-            preImageRepository.save(pre);
-        }
-        //3. 保存 diseaseRate
-        if(caseDto.getDiseaseRate()!=null){
-            if(caseDto.getDiseaseRate().getDiseaseRateId()!=null){
-                rate.setDiseaseRateId(caseDto.getDiseaseRate().getDiseaseRateId());
-            }
-            rate.setaRate(caseDto.getDiseaseRate().getaRate());
-            rate.setdRate(caseDto.getDiseaseRate().getaRate());
-            rate.setgRate(caseDto.getDiseaseRate().getaRate());
-            rate.setcRate(caseDto.getDiseaseRate().getaRate());
-            rate.sethRate(caseDto.getDiseaseRate().getaRate());
-            rate.setOtherRate(caseDto.getDiseaseRate().getaRate());
-            rate.setmRate(caseDto.getDiseaseRate().getaRate());
-            diseaseRateRepository.save(rate);
-        }
-        //4. 保存 patientInfo
+
+        //2. 保存 patientInfo
         if(caseDto.getPatientInfo()!=null){
             if(caseDto.getPatientInfo().getPatientId()!=null){
                 patient = patientInfoRepository.findById(caseDto.getPatientInfo().getPatientId()).get();
@@ -81,14 +59,17 @@ public class CaseServiceImpl implements CaseService {
             patient.setAge(caseDto.getPatientInfo().getAge());
             patientInfoRepository.save(patient);
         }
+
         // 5. 保存 Case
         Case CasePojo = new Case();
         BeanUtils.copyProperties(caseDto, CasePojo);
         CasePojo.setOriginImageData(origin);
-        CasePojo.setPreImageData(pre);
+
         CasePojo.setPatientInfo(patient);
-        CasePojo.setDiseaseRate(rate);
         CasePojo.setIsDeleted(0);
+        if(caseDto.getDiseaseName()!=null){
+            CasePojo.setDiseaseName(caseDto.getDiseaseName());
+        }
         return caseRepository.save(CasePojo);
     }
 
@@ -98,18 +79,37 @@ public class CaseServiceImpl implements CaseService {
     @Override
     public PageBean<CaseLibDto> getCaseListByPage(
             Integer pageNum, Integer pageSize,
-            Integer diagStatus, Integer diseaseType, String patientInfoPatientId
+            Integer diagStatus, String[] diseaseName, String patientInfoPatientId
     ) {
+        //如果diagStatus，diseaseType，patientInfoPatientId为-1，则设置成NULL
+        if (diagStatus != null && diagStatus == -1) {
+            diagStatus = null;
+        }
+        if (diseaseName != null && "-1".equals(diseaseName)) {
+            diseaseName = null;
+        }
+        if ("-1".equals(patientInfoPatientId)) {
+            patientInfoPatientId = null;
+        }
         // 1. 创建 Pageable 参数（PageRequest 是 Pageable 的子类）
         // 确保 pageNum 和 pageSize 不为 null
         if (pageNum == null || pageSize == null) {
             throw new IllegalArgumentException("页码和每页数量不能为空");
         }
         Pageable pageable = PageRequest.of(pageNum-1, pageSize);
+        //将diseaseName转换成Json字符串
 
+        String diseaseNameJson = null;
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            diseaseNameJson = diseaseName != null ?
+                    objectMapper.writeValueAsString(diseaseName) : null;
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException("疾病名称数组转换失败", e);
+        }
         // 2. 调用仓库方法时传递 Pageable
         Page<Case> casePage = caseRepository.list(
-                diagStatus, diseaseType, patientInfoPatientId, pageable
+                diagStatus, diseaseNameJson, patientInfoPatientId, pageable
         );
         // 3. 转换为 DTO 并封装到 PageBean
         PageBean<CaseLibDto> pageBean = convertToPageBean(casePage);
@@ -124,11 +124,6 @@ public class CaseServiceImpl implements CaseService {
         if (origin != null && origin.getImageId() == null) {
             oriRepository.save(origin);
         }
-        // 如果PreImageData是新对象（无ID），先保存它
-        PreImageData pre = caseDto.getPreImageData();
-        if (pre != null && pre.getImageId() == null) {
-            preImageRepository.save(pre);
-        }
         // 如果PatientInfo是新对象（无ID），先保存它
         PatientInfo patient = caseDto.getPatientInfo();
         if (patient != null && patient.getPatientId() == null) {
@@ -136,7 +131,9 @@ public class CaseServiceImpl implements CaseService {
         }
         Case up = new Case();
         BeanUtils.copyProperties(caseDto, up);
-        System.out.println(up.toString());
+        if(caseDto.getDiseaseName()!=null){
+            up.setDiseaseName(caseDto.getDiseaseName());
+        }
         caseRepository.save(up);
         BeanUtils.copyProperties(up, caseDto);
         return caseDto;
@@ -167,12 +164,16 @@ public class CaseServiceImpl implements CaseService {
     @Override
     public CaseDto updateNorDiag(CaseDto caseDto) {
         String caseId = caseDto.getCaseId();
-        // 验证病例是否存在
-        caseRepository.findById(caseId)
+        Case aCase = caseRepository.selectById(caseId)
                 .orElseThrow(() -> new RuntimeException("病例不存在 ID：" + caseId));
+        if(caseDto.getDiseaseName()!=null){
+            aCase.setDiseaseName(caseDto.getDiseaseName());
+            caseRepository.save(aCase);
+        }
 
-        // 直接调用自定义更新方法
-        caseRepository.updateNormalDiag(caseId, caseDto.getNormalDiag());
+        addNormalDiag(caseId, caseDto.getNormalDiag().getDoctorName(), caseDto.getNormalDiag().getDocSuggestions());
+        // 更新diseaseName
+
         return caseDto;
     }
 
@@ -190,6 +191,11 @@ public class CaseServiceImpl implements CaseService {
                 return pageBean;
     }
 
+    @Override
+    public List<Object[]> getNormalDiagByCaseId(String caseId) {
+        return normalDiagRepository.findNormalDiagsByCaseId(caseId);
+    }
+
     private PageBean<CaseLibDto> convertToPageBean(Page<Case> casePage) {
         PageBean<CaseLibDto> pb = new PageBean<>();
         pb.setTotal(casePage.getTotalElements()); // 总记录数
@@ -205,6 +211,21 @@ public class CaseServiceImpl implements CaseService {
     private CaseLibDto convertToDto(Case caseEntity) {
         CaseLibDto dto = new CaseLibDto();
         BeanUtils.copyProperties(caseEntity, dto);
+        //将实体类里面的diseaseNameJson转换成String[]类型
+        //再存储到dto里面的diseaseName字段
+
+        try {
+            if (caseEntity.getDiseaseNameJson() != null) {
+                ObjectMapper objectMapper = new ObjectMapper();
+                dto.setDiseaseNameJ(objectMapper.readValue(caseEntity.getDiseaseNameJson(), String[].class));
+            } else {
+                dto.setDiseaseNameJ(new String[0]);  // 设置为空数组而不是 null
+            }
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("疾病名称转换失败", e);
+        }
+
+
         System.out.println(dto.toString());
         return dto;
     }
@@ -225,6 +246,19 @@ public class CaseServiceImpl implements CaseService {
         BeanUtils.copyProperties(caseEntity, dto);
         System.out.println(dto.toString());
         return dto;
+    }
+    public void addNormalDiag(String caseId, String doctorName, String suggestions) {
+        // 1. 创建 NormalDiag 对象
+        NormalDiag diag = new NormalDiag();
+        diag.setDoctorName(doctorName);
+        diag.setDocSuggestions(suggestions);  // 假设已正确映射医生建议字段
+
+        // 2. 关联 Case（通过 caseId）
+        Case caseEntity = caseRepository.selectById(caseId).orElseThrow(() -> new RuntimeException("Case not found"));
+        diag.setCaseEntity(caseEntity);
+
+        // 3. 保存诊断信息
+        normalDiagRepository.save(diag);
     }
 }
 

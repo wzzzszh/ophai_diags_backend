@@ -3,13 +3,18 @@ package com.itshixun.industy.fundusexamination.pojo;
 
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.sql.Date;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author 10169
@@ -20,6 +25,7 @@ import java.time.LocalDateTime;
 @Data
 @Table(name = "cases")
 @Entity
+@ToString(exclude = "normalDiags")
 public class Case {
     //病例id
     @Id
@@ -39,18 +45,6 @@ public class Case {
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "oriimage_data_id")
     private OriginImageData originImageData;
-    //预处理照片
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "preimage_data_id")
-    private PreImageData preImageData;
-    //疾病概率表
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "rate_id")
-    private DiseaseRate diseaseRate;
-    //ai诊断
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "ai_diag_id")
-    private AiDiag aiDiag;
     //一个json格式字段
     @Column(name = "ai_case_info", columnDefinition = "JSON") // MySQL专用语法
     private String aiCaseInfo;
@@ -58,9 +52,9 @@ public class Case {
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "nor_diag_id")
     private NormalDiag doctorDiag;
-    //医生诊断
-    @Column(name = "normal_diag")
-    private String normalDiag;
+    // 修正为多个医生诊断
+    @OneToMany(mappedBy = "caseEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<NormalDiag> doctorDiags = new ArrayList<>();;
     //责任医师（111）外键
     @Column(name = "responsible_doctor")
     private String responsibleDoctor;
@@ -70,9 +64,8 @@ public class Case {
     //疾病类型
     @Column(name = "disease_type")
     private Integer diseaseType;
-    //最后更新时间
-    @Column(name = "last_update_date")
-    private Date lastUpdateDate;
+    @Column(name = "disease_name")
+    private String diseaseNameJson;
     //创建时间
     @Column(name = "create_date")
     @CreationTimestamp
@@ -84,7 +77,24 @@ public class Case {
     // 逻辑删除标志（0表示有效，1表示已删除）
     @Column(name = "is_deleted", columnDefinition = "int default 0")
     private Integer isDeleted;
+    // 自定义 json   * getter 和 * setter 方法
+    public String[] getDiseaseName() {
+        try {
+            return new ObjectMapper().readValue(diseaseNameJson, String[].class);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return new String[0];
+        }
+    }
 
+    public void setDiseaseName(String[] diseaseName) {
+        try {
+            this.diseaseNameJson = new ObjectMapper().writeValueAsString(diseaseName);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            this.diseaseNameJson = "[]";
+        }
+    }
     public void setIsDeleted(Integer isDeleted) {
         this.isDeleted = isDeleted;
     }
@@ -99,5 +109,6 @@ public class Case {
     public void setPatientInfo(PatientInfo patientInfo) {
         this.patientInfo = patientInfo;
     }
+
 
 }

@@ -1,6 +1,7 @@
 package com.itshixun.industy.fundusexamination.Service;
 
 import com.itshixun.industy.fundusexamination.pojo.Case;
+import com.itshixun.industy.fundusexamination.pojo.PatientInfo;
 import com.itshixun.industy.fundusexamination.pojo.dto.CaseDto;
 import com.itshixun.industy.fundusexamination.pojo.httpEnity.ResponseData;
 import org.apache.coyote.Response;
@@ -27,4 +28,6 @@ public interface PreImageService {
 
     Map<String, List<MultipartFile>> pattern(MultipartFile[] files);
 
+
+    PatientInfo selectPatientInfo(String patientId);
 }

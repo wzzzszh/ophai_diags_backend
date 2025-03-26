@@ -5,18 +5,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itshixun.industy.fundusexamination.Service.CaseService;
 import com.itshixun.industy.fundusexamination.Utils.ResponseMessage;
 import com.itshixun.industy.fundusexamination.pojo.Case;
+import com.itshixun.industy.fundusexamination.pojo.NormalDiag;
 import com.itshixun.industy.fundusexamination.pojo.PageBean;
-import com.itshixun.industy.fundusexamination.pojo.dto.CaseDto;
+import com.itshixun.industy.fundusexamination.pojo.dto.*;
 //import com.itshixun.industy.fundusexamination.pojo.dto.CaseLibDto;
-import com.itshixun.industy.fundusexamination.pojo.dto.CaseLibDto;
-import com.itshixun.industy.fundusexamination.pojo.dto.JcaseDto;
-import com.itshixun.industy.fundusexamination.pojo.dto.historyCaseListDto;
 import org.hibernate.query.Page;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -26,14 +26,15 @@ public class CaseContoller {
     private CaseService caseService;
     //分页查询病例列表
     @GetMapping("/list")
+    @CrossOrigin
     public ResponseMessage <PageBean<CaseLibDto>> getCaseListByPage(
             Integer pageNum,
             Integer pageSize,
             @RequestParam(required = false) Integer diagStatus,
-            @RequestParam(required = false) Integer diseaseType,
+            @RequestParam(required = false) String[] diseaseName,
             @RequestParam(required = false) String patientInfoPatientId
     ) {
-        PageBean<CaseLibDto> pb = caseService.getCaseListByPage(pageNum,pageSize,diagStatus,diseaseType,patientInfoPatientId);
+        PageBean<CaseLibDto> pb = caseService.getCaseListByPage(pageNum,pageSize,diagStatus,diseaseName,patientInfoPatientId);
         return ResponseMessage.success(pb);
     }
     //添加病例
@@ -62,7 +63,24 @@ public class CaseContoller {
     //查询单个病例
     @GetMapping("/simple/{caseId}")
     public ResponseMessage<JcaseDto> getCaseById(@PathVariable String caseId) {
+        //先查询病例库,并且得到jsonDName,获得历史医嘱列表
         Case casePojo = caseService.getCaseById(caseId);
+        List<Object[]> normalDiagList = caseService.getNormalDiagByCaseId(caseId);
+        List<NormalDiagDto> normalDiagObjList = new ArrayList<>();
+        for (Object[] objArray : normalDiagList) {
+            NormalDiagDto normalDiag = new NormalDiagDto();
+            // 假设Object[]数组中的元素顺序与NormalDiag属性顺序对应
+            // 这里需要根据实际情况调整索引和赋值逻辑
+            normalDiag.setCreateDate((LocalDateTime) objArray[0]);
+            normalDiag.setNDiagId((String) objArray[1]);
+            normalDiag.setDocSuggestions((String) objArray[2]);
+            normalDiag.setDoctorName((String) objArray[3]);
+            normalDiag.setUpdateDate((LocalDateTime) objArray[4]);
+            // 其他属性赋值...
+            normalDiagObjList.add(normalDiag);
+        }
+
+        String[] diseaseName = casePojo.getDiseaseName();
         String patientId = casePojo.getPatientInfo().getPatientId();
         PageBean<historyCaseListDto> pb = caseService.getHistoryCaseListByPage(patientId);
 
@@ -75,9 +93,11 @@ public class CaseContoller {
         try {
             JsonNode jsonNode = objectMapper.readTree(jsonNodeStr);
             BeanUtils.copyProperties(casePojo,jcaseDto);
-            //放置json和历史病例
+            //放置json和历史病例、疾病名
+            jcaseDto.setDiseaseName(diseaseName);
             jcaseDto.setAiCaseInfoJson(jsonNode);
             jcaseDto.setHistoryCaseListDto(pb);
+            jcaseDto.setDoctorDiags(normalDiagObjList);
             // 现在你可以使用 jsonNode 对象进行后续操作
         } catch (Exception e) {
             e.printStackTrace();
