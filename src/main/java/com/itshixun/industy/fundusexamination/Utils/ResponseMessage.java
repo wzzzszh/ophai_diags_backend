@@ -27,6 +27,10 @@ public class ResponseMessage<T> {
     public static <T> ResponseMessage<T> success(String token) {
         return new ResponseMessage(HttpStatus.OK.value(),"success",token);
     }
+    //返回具体信息
+    public static <T> ResponseMessage<T> success(String message,T data) {
+        return new ResponseMessage(HttpStatus.OK.value(),message,data);
+    }
     //无参接口请求成功
     public static <T> ResponseMessage<T> success() {
 

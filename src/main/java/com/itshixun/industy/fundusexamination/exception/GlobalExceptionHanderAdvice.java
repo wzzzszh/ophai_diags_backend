@@ -22,7 +22,22 @@ public class GlobalExceptionHanderAdvice {
     @ExceptionHandler({Exception.class})
     public ResponseMessage handleException(Exception e, HttpServletRequest request, HttpServletResponse response) {
 
-        log.error("统一异常", e);
+        // 获取堆栈信息
+        StackTraceElement[] stackTrace = e.getStackTrace();
+        String className = "未知类";
+        String methodName = "未知方法";
+
+        // 遍历堆栈寻找异常源头（跳过当前异常处理器）
+        for (StackTraceElement element : stackTrace) {
+            if (!element.getClassName().equals(this.getClass().getName())) {
+                className = element.getClassName();
+                methodName = element.getMethodName();
+                break;
+            }
+        }
+
+        // 记录带定位信息的日志
+        log.error("【异常定位】类：{} 方法：{}", className, methodName, e);
         return new ResponseMessage(500,"error",null);
     }
     @ExceptionHandler(MethodArgumentNotValidException.class)

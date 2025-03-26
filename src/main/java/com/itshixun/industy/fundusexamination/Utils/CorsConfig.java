@@ -20,7 +20,10 @@ public class CorsConfig {
         // 生产环境建议替换为具体域名
         config.addAllowedOrigin("*");
         config.addAllowedHeader("*");
-        config.addAllowedMethod("*");
+        config.addAllowedMethod("POST");
+        config.addAllowedMethod("GET");
+        config.addAllowedMethod("DELETE");
+        config.addAllowedMethod("PUT");
         config.setMaxAge(MAX_AGE);
 
         // 公开接口路径

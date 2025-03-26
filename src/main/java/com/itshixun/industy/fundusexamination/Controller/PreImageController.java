@@ -165,6 +165,6 @@ public class PreImageController {
             caseService.update(caseDto);
         }
 
-        return ResponseMessage.success("保存病例成功，请前往诊断页面");
+        return ResponseMessage.success("保存病例成功，请前往诊断页面",null);
     }
 }

@@ -27,21 +27,21 @@ public class CaseContoller {
     private CaseService caseService;
     //分页查询病例列表
     @GetMapping("/list")
-    @CrossOrigin
     public ResponseMessage <PageBean<CaseLibDto>> getCaseListByPage(
             Integer pageNum,
             Integer pageSize,
             @RequestParam(required = false) Integer diagStatus,
-            @RequestParam(required = false) String[] diseaseName,
+            @RequestParam(required = false) String diseaseName,
             @RequestParam(required = false) String patientInfoPatientId
     ) {
-        // 新增参数处理逻辑
-        if (diseaseName != null && diseaseName.length > 0 && "-1".equals(diseaseName[0])) {
-            diseaseName = null;
-        }
 
-        System.out.println("处理后的疾病名称参数：" + Arrays.toString(diseaseName));
-        PageBean<CaseLibDto> pb = caseService.getCaseListByPage(pageNum,pageSize,diagStatus,diseaseName,patientInfoPatientId);
+        String[] diseaseNameArray = diseaseName.split(",");
+//        // 新增参数处理逻辑
+//        if (diseaseName != null && diseaseName.length > 0 && "-1".equals(diseaseName[0])) {
+//            diseaseName = null;
+//        }
+
+        PageBean<CaseLibDto> pb = caseService.getCaseListByPage(pageNum,pageSize,diagStatus,diseaseNameArray,patientInfoPatientId);
         return ResponseMessage.success(pb);
     }
     //添加病例

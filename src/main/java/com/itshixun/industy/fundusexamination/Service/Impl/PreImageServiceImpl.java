@@ -96,7 +96,7 @@ public class PreImageServiceImpl implements PreImageService {
         // ^([a-zA-Z0-9_]+)      患者ID（字母/数字/下划线组成）
         // _(left|right)         左右眼标识
         // \.\\w+$               文件扩展名
-        Pattern pattern = Pattern.compile("^([a-zA-Z0-9_]+)_(left|right)\\.\\w+$");
+        Pattern pattern = Pattern.compile("^([a-zA-Z0-9_]+)_([\\w\\u4e00-\\u9fff-]+)_(left|right)\\.\\w+$");
 
         // 遍历文件数组，根据文件名格式进行分组
         for (MultipartFile file : files) {

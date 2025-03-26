@@ -87,7 +87,8 @@ public class CaseServiceImpl implements CaseService {
         if (diagStatus != null && diagStatus == -1) {
             diagStatus = null;
         }
-        if (diseaseName != null && "-1".equals(diseaseName)) {
+
+        if ("全部".equals(diseaseName[0])) {
             diseaseName = null;
         }
         if ("-1".equals(patientInfoPatientId)) {
@@ -115,7 +116,6 @@ public class CaseServiceImpl implements CaseService {
         } catch (JsonProcessingException e) {
             throw new IllegalArgumentException("疾病名称数组转换失败", e);
         }
-        System.out.println("realselect"+diseaseNameJson);
         // 2. 调用仓库方法时传递 Pageable
         Page<Case> casePage = caseRepository.list(
                 diagStatus, diseaseNameJson, patientInfoPatientId, pageable

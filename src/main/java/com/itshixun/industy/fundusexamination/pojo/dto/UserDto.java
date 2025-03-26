@@ -39,7 +39,7 @@ public class UserDto {
             message = "身份号格式不正确，需符合国家标准")
     private String idNumber;
     // 医生编号
-    private Integer doctorNumber;
+//    private Integer doctorNumber;
     // 邮箱
     @Email(message = "邮箱格式不正确")
     private String email;
@@ -50,8 +50,8 @@ public class UserDto {
             message = "手机号格式不正确，需以1开头且第二位为3-9")
     private String phone;
     // 真实姓名
-    @Pattern(regexp = "^[\\u4e00-\\u9fa5·•]{2,16}$",
-            message = "请输入有效的中文姓名（2-16个汉字，可包含间隔号）")
+//    @Pattern(regexp = "^[\\u4e00-\\u9fa5·•]{2,16}$",
+//            message = "请输入有效的中文姓名（2-16个汉字，可包含间隔号）")
     private String realName;
     // 性别
     // 0: 男
