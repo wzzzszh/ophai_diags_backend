@@ -96,6 +96,7 @@ public class PreImageController {
             //设置责任医生的姓名
             Map<String,Object> map = ThreadLocalUtil.get();
             String responsibleDoctor = (String) map.get("userName");
+            ThreadLocalUtil.remove();
             PatientInfo patientInfo = new PatientInfo();
             //获取患者信息注入病例
             patientInfo = preImageService.selectPatientInfo(patientId);

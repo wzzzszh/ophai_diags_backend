@@ -49,7 +49,9 @@ public class PatientInfo {
     @Column(name = "update_date")
     @UpdateTimestamp
     private LocalDateTime updateDate;
-
+    //逻辑删除字段,默认值为0
+    @Column(name = "is_delete", columnDefinition = "int default 0")
+    private Integer isDelete;
 
 
 }

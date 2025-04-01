@@ -4,12 +4,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itshixun.industy.fundusexamination.Service.CaseService;
 import com.itshixun.industy.fundusexamination.Utils.ResponseMessage;
+import com.itshixun.industy.fundusexamination.Utils.ThreadLocalUtil;
+import com.itshixun.industy.fundusexamination.exception.GlobalExceptionHanderAdvice;
 import com.itshixun.industy.fundusexamination.pojo.Case;
 import com.itshixun.industy.fundusexamination.pojo.NormalDiag;
 import com.itshixun.industy.fundusexamination.pojo.PageBean;
 import com.itshixun.industy.fundusexamination.pojo.dto.*;
 //import com.itshixun.industy.fundusexamination.pojo.dto.CaseLibDto;
+import com.itshixun.industy.fundusexamination.repository.NormalDiagRepository;
 import org.hibernate.query.Page;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -19,12 +24,15 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/case")
 public class CaseContoller {
     @Autowired
     private CaseService caseService;
+    @Autowired
+    private NormalDiagRepository normalDiagRepository;
     //分页查询病例列表
     @GetMapping("/list")
     public ResponseMessage <PageBean<CaseLibDto>> getCaseListByPage(
@@ -36,10 +44,6 @@ public class CaseContoller {
     ) {
 
         String[] diseaseNameArray = diseaseName.split(",");
-//        // 新增参数处理逻辑
-//        if (diseaseName != null && diseaseName.length > 0 && "-1".equals(diseaseName[0])) {
-//            diseaseName = null;
-//        }
 
         PageBean<CaseLibDto> pb = caseService.getCaseListByPage(pageNum,pageSize,diagStatus,diseaseNameArray,patientInfoPatientId);
         return ResponseMessage.success(pb);
@@ -56,6 +60,24 @@ public class CaseContoller {
     @PutMapping("/update")
     public ResponseMessage<CaseDto> updateCase(@Validated @RequestBody CaseDto caseDto) {
         CaseDto CaseNew;
+        if(caseDto.getNormalDiag().getDocSuggestions()!=null){
+            NormalDiag normalDiag = new NormalDiag();
+            System.out.println("调试信息");
+            Map<String,Object> map = ThreadLocalUtil.get();
+            String responsibleDoctor = (String) map.get("userName");
+            Logger log = LoggerFactory.getLogger(GlobalExceptionHanderAdvice.class);
+            log.error("Responsible Doctor: {}", responsibleDoctor); // 打印到控制台
+            // 直接打印到控制台
+            System.out.println("Responsible Doctor: " + responsibleDoctor);
+//            throw new BusinessException(402,responsibleDoctor);
+            normalDiag.setDoctorName(responsibleDoctor);
+            normalDiag.setDocSuggestions(caseDto.getNormalDiag().getDocSuggestions());
+            normalDiag.setDoctorName(caseDto.getNormalDiag().getDoctorName());
+            Case c = new Case();
+            c.setCaseId(caseDto.getCaseId());
+            normalDiag.setCaseEntity(c);
+            normalDiagRepository.save(normalDiag);
+        }
         CaseNew = caseService.update(caseDto);
         return ResponseMessage.success(CaseNew);
     }

@@ -32,7 +32,8 @@ public interface CaseRepository extends JpaRepository<Case, String> {
             "WHERE (:diagStatus IS NULL OR c.diagStatus = :diagStatus) " +
             "AND (:diseaseNameJson IS NULL OR c.diseaseNameJson = :diseaseNameJson) " +
             "AND (:patientInfoPatientId IS NULL OR c.patientInfo.patientId = :patientInfoPatientId)"+
-            "AND c.isDeleted = 0")
+            "AND c.isDeleted = 0" +
+            " ORDER BY c.createDate DESC")
     Page<Case> list(@Param("diagStatus") Integer diagStatus,
                     @Param("diseaseNameJson") String diseaseNameJson,
                     @Param("patientInfoPatientId") String patientInfoPatientId,

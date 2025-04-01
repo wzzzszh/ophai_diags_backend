@@ -7,6 +7,7 @@ public class ResponseMessage<T> {
     private Integer code;
     private String message;
     private T data;
+    private T data2;
     public ResponseMessage(Integer code,String message, T data) {
         this.code = code;
         this.message = message;
@@ -33,7 +34,6 @@ public class ResponseMessage<T> {
     }
     //无参接口请求成功
     public static <T> ResponseMessage<T> success() {
-
         return new ResponseMessage(HttpStatus.OK.value(),"success",null);
     }
     //接口请求成功并且返回数据

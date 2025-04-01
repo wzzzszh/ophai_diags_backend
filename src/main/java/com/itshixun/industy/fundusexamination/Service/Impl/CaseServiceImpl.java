@@ -1,17 +1,19 @@
 package com.itshixun.industy.fundusexamination.Service.Impl;
 
-//import com.github.pagehelper.Page;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.pagehelper.PageHelper;
+
 import com.itshixun.industy.fundusexamination.Service.CaseService;
+import com.itshixun.industy.fundusexamination.Utils.ThreadLocalUtil;
+
 import com.itshixun.industy.fundusexamination.pojo.*;
 import com.itshixun.industy.fundusexamination.pojo.dto.CaseDto;
 import com.itshixun.industy.fundusexamination.pojo.dto.CaseLibDto;
 import com.itshixun.industy.fundusexamination.pojo.dto.historyCaseListDto;
 import com.itshixun.industy.fundusexamination.repository.*;
 import jakarta.transaction.Transactional;
-import org.apache.ibatis.jdbc.Null;
+
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -19,10 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 @Transactional
 @Service
@@ -91,7 +90,7 @@ public class CaseServiceImpl implements CaseService {
         if ("全部".equals(diseaseName[0])) {
             diseaseName = null;
         }
-        if ("-1".equals(patientInfoPatientId)) {
+        if (patientInfoPatientId.isEmpty()) {
             patientInfoPatientId = null;
         }
         // 1. 创建 Pageable 参数（PageRequest 是 Pageable 的子类）
@@ -140,12 +139,14 @@ public class CaseServiceImpl implements CaseService {
         }
         Case up = new Case();
         BeanUtils.copyProperties(caseDto, up);
+
         if(caseDto.getDiseaseName()!=null){
             up.setDiseaseName(caseDto.getDiseaseName());
         }
-        caseRepository.save(up);
-        BeanUtils.copyProperties(up, caseDto);
+       caseRepository.save(up);
+       BeanUtils.copyProperties(up, caseDto);
         return caseDto;
+//        return null;
     }
 
     @Override
@@ -172,6 +173,13 @@ public class CaseServiceImpl implements CaseService {
 
     @Override
     public CaseDto updateNorDiag(CaseDto caseDto) {
+        if(caseDto.getNormalDiag().getDocSuggestions()!=null){
+
+            Map<String,Object> map = ThreadLocalUtil.get();
+            String responsibleDoctor = (String) map.get("userName");
+
+
+        }
         String caseId = caseDto.getCaseId();
         Case aCase = caseRepository.selectById(caseId)
                 .orElseThrow(() -> new RuntimeException("病例不存在 ID：" + caseId));
@@ -179,8 +187,14 @@ public class CaseServiceImpl implements CaseService {
             aCase.setDiseaseName(caseDto.getDiseaseName());
             caseRepository.save(aCase);
         }
+        if(caseDto.getNormalDiag().getDocSuggestions()!=null){
 
-        addNormalDiag(caseId, caseDto.getNormalDiag().getDoctorName(), caseDto.getNormalDiag().getDocSuggestions());
+            Map<String,Object> map = ThreadLocalUtil.get();
+            String responsibleDoctor = (String) map.get("userName");
+            addNormalDiag(caseId, responsibleDoctor, caseDto.getNormalDiag().getDocSuggestions());
+            caseDto.getNormalDiag().setDoctorName(responsibleDoctor);
+        }
+
         // 更新diseaseName
 
         return caseDto;

@@ -63,6 +63,8 @@ public class UserDto {
     private String hospital;
     // 职位
     private String position;
+    //token
+    private String token;
     // 头像URL
     private String avatarUrl;
 

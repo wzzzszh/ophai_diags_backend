@@ -6,7 +6,9 @@ import com.itshixun.industy.fundusexamination.Utils.JwtUtil;
 import com.itshixun.industy.fundusexamination.Utils.ResponseMessage;
 import com.itshixun.industy.fundusexamination.Utils.ThreadLocalUtil;
 import com.itshixun.industy.fundusexamination.pojo.User;
+import com.itshixun.industy.fundusexamination.pojo.dto.LoginUserDto;
 import com.itshixun.industy.fundusexamination.pojo.dto.UserDto;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -37,9 +39,10 @@ UserController {
 
     //登录
     @PostMapping("/login")
-    public ResponseMessage<User> login( @RequestBody UserDto user) {
+    public ResponseMessage<LoginUserDto> login( @RequestBody UserDto user) {
 //        User userNew = userService.findByUserName(user);
         User userNew = userService.findByUserId(user);
+
         //判断该用户是否存在
         if(userNew == null) {
             return ResponseMessage.allError(411,"用户不存在");
@@ -55,8 +58,11 @@ UserController {
             //token存储到redis
             ValueOperations<String, String> operations = stringRedisTemplate.opsForValue();
             operations.set(token, token,1, TimeUnit.DAYS);
+            LoginUserDto loginUserDto = new LoginUserDto();
+            BeanUtils.copyProperties(userNew,loginUserDto);
+            loginUserDto.setToken(token);
 
-            return ResponseMessage.success(token);
+            return ResponseMessage.success(loginUserDto);
         }
         System.out.println("登陆出现未知错误");
         return ResponseMessage.allError(412,"密码不正确");
