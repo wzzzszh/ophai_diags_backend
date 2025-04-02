@@ -38,7 +38,7 @@ public class UserServiceImpl implements UserService {
             throw new ValidationException("身份证号已存在");
         }
         User userPojo = new User();
-
+        //复制到user实体类
         BeanUtils.copyProperties(user, userPojo);
         String transPassword = Md5Util.getMD5String(userPojo.getPasswordHash());
         userPojo.setPasswordHash(transPassword);

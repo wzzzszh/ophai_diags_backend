@@ -157,7 +157,7 @@ public class CaseServiceImpl implements CaseService {
 
     @Override
     public boolean isPatientExist(String patientId) {
-        Optional<PatientInfo> byId = patientInfoRepository.findById(patientId);
+        Optional<PatientInfo> byId = patientInfoRepository.selectById(patientId);
         return byId.isPresent();
 
     }

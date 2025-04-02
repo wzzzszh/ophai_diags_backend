@@ -21,11 +21,13 @@ public class LoginInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         //令牌验证
         String token = request.getHeader("Authorization");
+        System.out.println(token);
         //判断token是否存在
         ValueOperations<String, String> operations = stringRedisTemplate.opsForValue();
         String tokenRedis = operations.get(token);
         if(tokenRedis == null){
-            ResponseMessage.loginerror();
+            //401
+            ResponseMessage.loginRedisError();
             return false;
         }
         //

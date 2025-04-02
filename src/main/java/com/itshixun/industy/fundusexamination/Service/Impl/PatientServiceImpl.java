@@ -4,14 +4,17 @@ package com.itshixun.industy.fundusexamination.Service.Impl;
 import com.itshixun.industy.fundusexamination.Service.PatientService;
 import com.itshixun.industy.fundusexamination.pojo.PageBean;
 import com.itshixun.industy.fundusexamination.pojo.PatientInfo;
+import com.itshixun.industy.fundusexamination.pojo.dto.patientDto;
 import com.itshixun.industy.fundusexamination.pojo.dto.patientLibDto;
 import com.itshixun.industy.fundusexamination.repository.PatientInfoRepository;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -123,5 +126,38 @@ public class PatientServiceImpl implements PatientService {
                 .collect(Collectors.toList());
         return new PageBean<>(pageResult.getTotalElements(), dtoList);
 
+    }
+
+    @Override
+    public PatientInfo updatePatientInfo(patientDto patientDto) {
+        PatientInfo patientInfo = new PatientInfo();
+        patientInfo.setPatientId(patientDto.getPatientId());
+        patientInfo.setName(patientDto.getName());
+        patientInfo.setAge(patientDto.getAge());
+        patientInfo.setGender(patientDto.getGender());
+        LocalDateTime currentDateTime = LocalDateTime.now();
+        patientInfo.setCreateDate(currentDateTime);
+        patientInfo.setIsDelete(0);
+        patientInfo = patientInfoRepository.save(patientInfo);
+
+        return patientInfo;
+    }
+
+    @Override
+    public boolean delete(String patientId) {
+
+        if(patientInfoRepository.deleteByIdO(patientId) == 1){
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public patientDto add(PatientInfo patientInfo) {
+        patientInfo.setIsDelete(0);
+        PatientInfo save = patientInfoRepository.save(patientInfo);
+        patientDto patientDto = new patientDto();
+        BeanUtils.copyProperties(save, patientDto);
+        return patientDto;
     }
 }
