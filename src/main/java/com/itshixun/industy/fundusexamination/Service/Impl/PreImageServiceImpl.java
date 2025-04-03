@@ -109,7 +109,7 @@ public class PreImageServiceImpl implements PreImageService {
             }
             // 提取患者ID和类型，并将文件添加到对应的分组中
             String patientId = matcher.group(1);// 第1个括号匹配的内容（患者ID）
-            String type = matcher.group(2); // 第2个括号匹配的内容（left/right）
+            String leftAndRight = matcher.group(3); // 第2个括号匹配的内容（left/right）
             // computeIfAbsent：如果不存在该患者ID的键，则创建新ArrayList,如果存在，则返回该键对应的值
             fileGroups.computeIfAbsent(patientId, k -> new ArrayList<>()).add(file);
         }

@@ -32,7 +32,6 @@ UserController {
     //注册
     @PostMapping("/register")
     public ResponseMessage<User> addUser(@Validated @RequestBody UserDto user) {
-        System.out.println(user.toString());
         User userNew = userService.add(user);
         return ResponseMessage.success(userNew);
     }

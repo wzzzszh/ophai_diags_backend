@@ -86,7 +86,6 @@ public class Case {
             return new String[0];
         }
     }
-
     public void setDiseaseName(String[] diseaseName) {
         try {
             this.diseaseNameJson = new ObjectMapper().writeValueAsString(diseaseName);
