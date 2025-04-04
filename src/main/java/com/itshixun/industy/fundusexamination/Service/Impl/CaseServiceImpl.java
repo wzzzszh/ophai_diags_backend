@@ -90,7 +90,7 @@ public class CaseServiceImpl implements CaseService {
         if ("全部".equals(diseaseName[0])) {
             diseaseName = null;
         }
-        if (patientInfoPatientId.isEmpty()) {
+        if (patientInfoPatientId.equals("-1")) {
             patientInfoPatientId = null;
         }
         // 1. 创建 Pageable 参数（PageRequest 是 Pageable 的子类）
@@ -267,7 +267,19 @@ public class CaseServiceImpl implements CaseService {
     private historyCaseListDto convertToHistoryDto(Case caseEntity) {
         historyCaseListDto dto = new historyCaseListDto();
         BeanUtils.copyProperties(caseEntity, dto);
-        System.out.println(dto.toString());
+        try {
+            if (caseEntity.getDiseaseNameJson() != null) {
+                // 移除所有反斜杠并保留双引号
+                String cleanedJson = caseEntity.getDiseaseNameJson()
+                        .replaceAll("\\\\", "");  // 正则表达式匹配所有反斜杠
+                dto.setDiseaseName(cleanedJson);
+            } else {
+                dto.setDiseaseName("[]");  // 空数组的JSON表示
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("疾病名称转换失败", e);
+        }
+
         return dto;
     }
     public void addNormalDiag(String caseId, String doctorName, String suggestions) {
@@ -277,9 +289,10 @@ public class CaseServiceImpl implements CaseService {
         diag.setDocSuggestions(suggestions);  // 假设已正确映射医生建议字段
 
         // 2. 关联 Case（通过 caseId）
+
         Case caseEntity = caseRepository.selectById(caseId).orElseThrow(() -> new RuntimeException("Case not found"));
         diag.setCaseEntity(caseEntity);
-
+        caseRepository.setDiagStatusById(caseId);
         // 3. 保存诊断信息
         normalDiagRepository.save(diag);
     }

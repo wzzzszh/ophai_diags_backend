@@ -17,9 +17,7 @@ import java.time.LocalDateTime;
 public class CaseLibDto {
     // 病例信息
     private String caseId;
-    //疾病类型
-    private Integer diseaseType;
-    //
+    //病例名称
     private String[] diseaseNameJ;
     //责任医师
     private String responsibleDoctor;
@@ -31,6 +29,4 @@ public class CaseLibDto {
     private LocalDateTime createDate;
     //更新时间
     private LocalDateTime updateDate;
-
-
 }
