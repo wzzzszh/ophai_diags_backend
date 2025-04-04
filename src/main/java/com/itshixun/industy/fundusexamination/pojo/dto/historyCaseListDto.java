@@ -10,7 +10,7 @@ public class historyCaseListDto {
     //病例ID
     private String caseId;
     //疾病类型
-    private Integer diseaseType;
+    private String diseaseName;
     //诊断状态
     private Integer diagStatus;
     //创建时间

@@ -83,7 +83,7 @@ public class PreImageController {
         return ResponseMessage.success();
 
     }
-    @PostMapping("/saveAndProcess")
+    @PostMapping("/saveAndProcess1")
     public ResponseMessage<ResponseData> savePreAndProcess(MultipartFile[] files)throws Exception{
         //1.参数验证，用map来接收所有的文件
         Map<String, List<MultipartFile>> mapFiles = preImageService.pattern(files);
@@ -189,7 +189,7 @@ public class PreImageController {
 
         return ResponseMessage.success("保存病例成功，请前往诊断页面",null);
     }
-    @PostMapping("/saveAndProcess1")
+    @PostMapping("/saveAndProcess")
     public ResponseMessage<ResponseData> savePreAndProcess1(MultipartFile[] files)throws Exception{
         //1.参数验证，用map来接收所有的文件
         Map<String, List<MultipartFile>> mapFiles = preImageService.pattern(files);
@@ -257,14 +257,11 @@ public class PreImageController {
             // 保存图片URL到病例
             caseDto.getOriginImageData().setLeftImage(urlLeft);
             caseDto.getOriginImageData().setRightImage(urlRight);
-            //改名后的文件发送到算法端
-//            ResponseData responseData = preImageService.sendUrltoP(caseId, urlLeft, urlRight);
-
             // 替换原有的直接调用
             // 改为发送消息到队列
             rabbitTemplate.convertAndSend(
-                    RabbitMQConfig.IMAGE_PROCESS_QUEUE,
-                    "", // 添加空 routingKey
+                    RabbitMQConfig.IMAGE_PROCESS_EXCHANGE,  // 使用交换机名称
+                    RabbitMQConfig.ROUTING_KEY,             // 使用路由键
                     new ImageProcessMessage( // 使用 MessageBuilder 构建消息
                             caseNew.getCaseId(),
                             urlLeft,
@@ -276,26 +273,6 @@ public class PreImageController {
                         return message;
                     }
             );
-
-//            String fullJson = responseData.getMessage();
-//            //判断是否有图片
-//            if (!responseData.getSuccess()) {
-//                // 处理没有图片的情况
-//                caseNew.setDiagStatus(2);
-//                return ResponseMessage.allError(417,"ai诊断失败!!!请联系管理员");
-//            }
-//            // 直接存入case_info字段
-//            caseDto.setAiCaseInfo(fullJson);
-//            caseDto = caseService.update(caseDto);
-//            //
-//
-//            // 修改后的正确方式
-//            Case managedCase = caseService.getCaseById(caseNew.getCaseId()); // 重新获取托管状态的实体
-//            managedCase.setAiCaseInfo(fullJson);
-//            BeanUtils.copyProperties(managedCase, caseDto);
-//            //设置正确诊断状态
-//            caseDto.setDiagStatus(1);
-//            caseService.update(caseDto);
         }
 
         return ResponseMessage.success("保存病例成功，请前往诊断页面",null);

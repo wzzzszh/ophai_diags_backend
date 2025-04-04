@@ -57,6 +57,7 @@ public class CaseContoller {
         return ResponseMessage.success(caseDto);
     }
     //修改病例
+    //废弃
     @PutMapping("/update")
     public ResponseMessage<CaseDto> updateCase(@Validated @RequestBody CaseDto caseDto) {
         CaseDto CaseNew;
@@ -67,9 +68,7 @@ public class CaseContoller {
             String responsibleDoctor = (String) map.get("userName");
             Logger log = LoggerFactory.getLogger(GlobalExceptionHanderAdvice.class);
             log.error("Responsible Doctor: {}", responsibleDoctor); // 打印到控制台
-            // 直接打印到控制台
-            System.out.println("Responsible Doctor: " + responsibleDoctor);
-//            throw new BusinessException(402,responsibleDoctor);
+
             normalDiag.setDoctorName(responsibleDoctor);
             normalDiag.setDocSuggestions(caseDto.getNormalDiag().getDocSuggestions());
             normalDiag.setDoctorName(caseDto.getNormalDiag().getDoctorName());
