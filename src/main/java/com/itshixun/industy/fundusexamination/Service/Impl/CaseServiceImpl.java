@@ -90,7 +90,7 @@ public class CaseServiceImpl implements CaseService {
         if ("全部".equals(diseaseName[0])) {
             diseaseName = null;
         }
-        if (patientInfoPatientId.equals("-1")) {
+        if (patientInfoPatientId.equals("")) {
             patientInfoPatientId = null;
         }
         // 1. 创建 Pageable 参数（PageRequest 是 Pageable 的子类）

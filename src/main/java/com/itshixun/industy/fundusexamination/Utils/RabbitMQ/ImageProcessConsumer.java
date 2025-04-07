@@ -27,6 +27,10 @@ public class ImageProcessConsumer {
     public void process(@Payload ImageProcessMessage message) {
         try {
             ResponseData responseData = preImageService.sendUrltoP(
+
+                    message.getPatientAge(),
+                    message.getPatientGender(),
+                    message.getPatientName(),
                     message.getCaseId(),
                     message.getLeftImageUrl(),
                     message.getRightImageUrl()

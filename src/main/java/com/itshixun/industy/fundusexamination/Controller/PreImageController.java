@@ -8,6 +8,7 @@ import com.itshixun.industy.fundusexamination.Utils.RabbitMQ.ImageProcessMessage
 import com.itshixun.industy.fundusexamination.Utils.RabbitMQ.RabbitMQConfig;
 import com.itshixun.industy.fundusexamination.Utils.ResponseMessage;
 import com.itshixun.industy.fundusexamination.Utils.ThreadLocalUtil;
+import com.itshixun.industy.fundusexamination.exception.BusinessException;
 import com.itshixun.industy.fundusexamination.pojo.Case;
 import com.itshixun.industy.fundusexamination.pojo.OriginImageData;
 import com.itshixun.industy.fundusexamination.pojo.PatientInfo;
@@ -68,7 +69,7 @@ public class PreImageController {
         String urlRight = oriUrl.get("urlRight");
 
         //Service发送url给算法
-        ResponseData allInfoFromP = preImageService.sendUrltoP(caseId, urlLeft, urlRight);
+        ResponseData allInfoFromP = preImageService.sendUrltoP(1,1,"2",caseId, urlLeft, urlRight);
         //接受算法返回结果
         String info = allInfoFromP.getMessage();
         //保存图片信息还有诊断结果
@@ -84,7 +85,7 @@ public class PreImageController {
 
     }
     @PostMapping("/saveAndProcess1")
-    public ResponseMessage<ResponseData> savePreAndProcess(MultipartFile[] files)throws Exception{
+    public ResponseMessage<ResponseData> savePreAndProcess1(MultipartFile[] files)throws Exception{
         //1.参数验证，用map来接收所有的文件
         Map<String, List<MultipartFile>> mapFiles = preImageService.pattern(files);
         //2.循环接收mapFiles
@@ -120,6 +121,11 @@ public class PreImageController {
             // 初始化图片URL
             String urlLeft = null;
             String urlRight = null;
+
+            //准备患者信息
+            String patientName = patientInfo.getName();
+            int patientAge = patientInfo.getAge();
+            int patientGender = patientInfo.getGender();
             //根据caseId重命名图片文件
             // 循环处理图片文件
             for (MultipartFile file : pictures) {
@@ -152,7 +158,7 @@ public class PreImageController {
             caseDto.getOriginImageData().setLeftImage(urlLeft);
             caseDto.getOriginImageData().setRightImage(urlRight);
             //改名后的文件发送到算法端
-            ResponseData responseData = preImageService.sendUrltoP(caseId, urlLeft, urlRight);
+            ResponseData responseData = preImageService.sendUrltoP(patientAge,patientGender,patientName, caseId, urlLeft, urlRight);
 
             // 替换原有的直接调用
 //            // 改为发送消息到队列
@@ -190,8 +196,12 @@ public class PreImageController {
         return ResponseMessage.success("保存病例成功，请前往诊断页面",null);
     }
     @PostMapping("/saveAndProcess")
-    public ResponseMessage<ResponseData> savePreAndProcess1(MultipartFile[] files)throws Exception{
+    public ResponseMessage<ResponseData> savePreAndProcess(MultipartFile[] files)throws Exception{
         //1.参数验证，用map来接收所有的文件
+        // 添加空文件数组检查
+        if (files == null || files.length == 0) {
+            throw new BusinessException(452,"上传文件列表不能为空");
+        }
         Map<String, List<MultipartFile>> mapFiles = preImageService.pattern(files);
         //2.循环接收mapFiles
         //迭代mapFiles
@@ -210,7 +220,6 @@ public class PreImageController {
             //设置责任医生的姓名
             Map<String,Object> map = ThreadLocalUtil.get();
             String responsibleDoctor = (String) map.get("userName");
-            ThreadLocalUtil.remove();
             PatientInfo patientInfo = new PatientInfo();
             //获取患者信息注入病例
             patientInfo = preImageService.selectPatientInfo(patientId);
@@ -226,6 +235,10 @@ public class PreImageController {
             // 初始化图片URL
             String urlLeft = null;
             String urlRight = null;
+            //准备患者信息
+            String patientName = patientInfo.getName();
+            int patientAge = patientInfo.getAge();
+            int patientGender = patientInfo.getGender();
             //根据caseId重命名图片文件
             // 循环处理图片文件
             for (MultipartFile file : pictures) {
@@ -257,16 +270,21 @@ public class PreImageController {
             // 保存图片URL到病例
             caseDto.getOriginImageData().setLeftImage(urlLeft);
             caseDto.getOriginImageData().setRightImage(urlRight);
+            caseService.update(caseDto);
             // 替换原有的直接调用
             // 改为发送消息到队列
+            //
             rabbitTemplate.convertAndSend(
                     RabbitMQConfig.IMAGE_PROCESS_EXCHANGE,  // 使用交换机名称
                     RabbitMQConfig.ROUTING_KEY,             // 使用路由键
-                    new ImageProcessMessage( // 使用 MessageBuilder 构建消息
+                    new ImageProcessMessage(
+                            // 使用 MessageBuilder 构建消息
                             caseNew.getCaseId(),
                             urlLeft,
                             urlRight,
-                            patientId
+                            patientName,
+                            patientAge,
+                            patientGender
                     ),
                     message -> {
                         message.getMessageProperties().setContentType("application/json");

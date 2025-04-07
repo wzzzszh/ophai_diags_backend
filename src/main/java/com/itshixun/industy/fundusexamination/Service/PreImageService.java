@@ -20,7 +20,7 @@ public interface PreImageService {
      */
     Case saveAndDiag(CaseDto caseDto);
 
-    ResponseData sendUrltoP(String caseId,String urlLeft, String urlRight);
+    ResponseData sendUrltoP(int age,int gender,String name,String caseId,String urlLeft, String urlRight);
 
     Map<String, String> saveOSS(String originalFileName1, String originalFileName2,
                                 InputStream inputStream1,

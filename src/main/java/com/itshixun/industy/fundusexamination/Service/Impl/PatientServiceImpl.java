@@ -103,10 +103,9 @@ public class PatientServiceImpl implements PatientService {
         }
         Pageable pageable = PageRequest.of(pageNum-1, pageSize);
         //quanbu11
-        if(name.equals("-1") ){
+        if(name.equals("") ){
             name = null;
         }
-        System.out.println("在这里。。。。。。"+name);
         // 2. 调用数据库查询方法，传入 Pageable 参数
         Page<PatientInfo> pageResult = patientInfoRepository.findPatientsByName(
                 name, pageable);

@@ -25,6 +25,8 @@ public class AliOssUtil {
         // 创建OSSClient实例。
         OSS ossClient = new OSSClientBuilder().build(ENDPOINT,ACCESS_KEY_ID,SECRET_ACCESS_KEY);
         //公文访问地址
+        String prefix = objectName.split("_")[0]+"_"+objectName.split("_")[1];
+        objectName = prefix+"/"+objectName;
         String url = "";
         try {
             // 创建存储空间。

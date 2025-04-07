@@ -1,7 +1,9 @@
 package com.itshixun.industy.fundusexamination.Service.Impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itshixun.industy.fundusexamination.Service.PreImageService;
 import com.itshixun.industy.fundusexamination.Utils.AliOssUtil;
+import com.itshixun.industy.fundusexamination.exception.BusinessException;
 import com.itshixun.industy.fundusexamination.pojo.Case;
 import com.itshixun.industy.fundusexamination.pojo.PatientInfo;
 import com.itshixun.industy.fundusexamination.pojo.dto.CaseDto;
@@ -11,6 +13,7 @@ import com.itshixun.industy.fundusexamination.repository.CaseRepository;
 import com.itshixun.industy.fundusexamination.repository.PatientInfoRepository;
 import com.itshixun.industy.fundusexamination.repository.PreImageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -37,26 +40,48 @@ public class PreImageServiceImpl implements PreImageService {
     }
 
     @Override
-    public ResponseData sendUrltoP(String caseId, String urlLeft, String urlRight) {
+    public ResponseData sendUrltoP(int age ,int gender ,String name, String caseId, String urlLeft, String urlRight) {
         String apiUrl =
-                "http://127.0.0.1:4523/m1/5970416-5658644-default/api/process-images/";
+                "https://1a2f-222-195-190-92.ngrok-free.app/api/process-images/";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.add("ngrok-skip-browser-warning", "true"); // 绕过ngrok警告
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
         //
-        Map<String, String> requestBody = new HashMap<>();
-        requestBody.put("urlLeft", urlLeft);
-        requestBody.put("urlRight", urlRight);
-        //发送请求体
-        ResponseEntity<String> response = restTemplate.postForEntity(
-                apiUrl,
-                requestBody,
-                String.class
-        );
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("name", name);
+        requestBody.put("age", age);  // 直接使用int类型
+        requestBody.put("gender", gender);  // 直接使用int类型
+        requestBody.put("left_url", urlLeft);
+        requestBody.put("right_url", urlRight);
+        // 修复点：将 headers 和 body 封装到 HttpEntity
+        HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
+//        //发送请求体
+//        ResponseEntity<String> response = restTemplate.postForEntity(
+//                apiUrl,
+//                requestEntity,
+//                String.class
+//        );
+        try {
+            // 打印最终请求体
+            String jsonBody = new ObjectMapper().writeValueAsString(requestBody);
+//            System.out.println("完整请求体：\n" + jsonBody);
 
-        //获取返回结果
-        String r = response.getBody();
-        //将所有属性保存到case里面
-        return new ResponseData(r,true);
+            HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers); // 使用String类型body
+            ResponseEntity<String> response = restTemplate.postForEntity(apiUrl, entity, String.class);
+
+            System.out.println("收到响应：" + response.getStatusCode());
+            return new ResponseData(response.getBody(), true);
+        } catch (Exception e) {
+            System.err.println("请求失败：" + e.getMessage());
+            e.printStackTrace();
+            return new ResponseData("请求算法服务失败", false);
+        }
+
+//        //获取返回结果
+//        String r = response.getBody();
+//        //将所有属性保存到case里面
+//        return new ResponseData(r,true);
     }
 
     /**已经弃用
@@ -97,7 +122,11 @@ public class PreImageServiceImpl implements PreImageService {
         // _(left|right)         左右眼标识
         // \.\\w+$               文件扩展名
         Pattern pattern = Pattern.compile("^([a-zA-Z0-9_]+)_([\\w\\u4e00-\\u9fff-]+)_(left|right)\\.\\w+$");
-
+        System.out.println("文件数量：" + files.length);
+        // 添加空文件数组检查
+        if (files == null || files.length == 0) {
+            throw new BusinessException(452,"上传文件列表不能为空");
+        }
         // 遍历文件数组，根据文件名格式进行分组
         for (MultipartFile file : files) {
             String fileName = file.getOriginalFilename();

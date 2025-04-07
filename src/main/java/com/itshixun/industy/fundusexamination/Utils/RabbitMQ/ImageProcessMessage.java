@@ -12,5 +12,7 @@ public class ImageProcessMessage implements Serializable {
     private String caseId;
     private String leftImageUrl;
     private String rightImageUrl;
-    private String patientId;
+    private String patientName;
+    private int patientAge;
+    private int patientGender;
 }

@@ -23,6 +23,7 @@ public class LoginInterceptor implements HandlerInterceptor {
         String token = request.getHeader("Authorization");
         //判断token是否存在
         ValueOperations<String, String> operations = stringRedisTemplate.opsForValue();
+        System.out.println(token);
         String tokenRedis = operations.get(token);
         if(tokenRedis == null){
             //401
