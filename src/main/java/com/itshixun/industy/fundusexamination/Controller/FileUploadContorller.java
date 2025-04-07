@@ -2,6 +2,7 @@ package com.itshixun.industy.fundusexamination.Controller;
 
 import com.itshixun.industy.fundusexamination.Utils.AliOssUtil;
 import com.itshixun.industy.fundusexamination.Utils.ResponseMessage;
+import com.itshixun.industy.fundusexamination.exception.BusinessException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,7 +18,7 @@ public class FileUploadContorller {
         //
         String originalFileName = file.getOriginalFilename();
         if (originalFileName == null || originalFileName.isEmpty()) {
-            throw new RuntimeException("文件名不能为空");
+            throw new BusinessException(418,"文件名不能为空");
         }
         //保证文件名唯一
         String filename = UUID.randomUUID().toString() + originalFileName.substring(originalFileName.lastIndexOf("."));

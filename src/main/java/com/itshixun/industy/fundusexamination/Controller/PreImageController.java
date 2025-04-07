@@ -202,7 +202,12 @@ public class PreImageController {
         if (files == null || files.length == 0) {
             throw new BusinessException(452,"上传文件列表不能为空");
         }
-        Map<String, List<MultipartFile>> mapFiles = preImageService.pattern(files);
+        Map<String, List<MultipartFile>> mapFiles = null;
+        try {
+            mapFiles = preImageService.pattern(files);
+        } catch (Exception e) {
+            throw new BusinessException(453,e.getMessage());
+        }
         //2.循环接收mapFiles
         //迭代mapFiles
         for (Map.Entry<String, List<MultipartFile>> entry : mapFiles.entrySet()) {
@@ -258,7 +263,7 @@ public class PreImageController {
 
                 // 上传到OSS
                 String url = AliOssUtil.uploadFile(newFilename, file.getInputStream());
-
+                System.out.println("oss存储的url"+url);
                 // 保存URL到对应变量
                 if (originalName.contains("left")) {
                     urlLeft = url;

@@ -75,9 +75,7 @@ public class PatientServiceImpl implements PatientService {
         // 2. 调用数据库查询方法，传入 Pageable 参数
         Page<PatientInfo> pageResult = patientInfoRepository.findPatientsByPatientId(
                  patientId, pageable);
-        // 3. 处理查询结果，将其转换为 Page<patientLibDto>
-        // 这里需要根据实际情况进行转换，可能需要自定义转换逻辑
-        // 转换逻辑调整为适配实际PageBean结构
+
         // 3. 处理查询结果，将其转换为 Page<patientLibDto>
         // 这里需要根据实际情况进行转换，可能需要自定义转换逻辑
         // 转换逻辑调整为适配实际PageBean结构

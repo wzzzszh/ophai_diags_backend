@@ -78,6 +78,9 @@ public class Case {
     @Column(name = "is_deleted", columnDefinition = "int default 0")
     private Integer isDeleted;
     // 自定义 json   * getter 和 * setter 方法
+    public String getDiseaseNameJson() {
+        return diseaseNameJson;
+    }
     public String[] getDiseaseName() {
         try {
             return new ObjectMapper().readValue(diseaseNameJson, String[].class);

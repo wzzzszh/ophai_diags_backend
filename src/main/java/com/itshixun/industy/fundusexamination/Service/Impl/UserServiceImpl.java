@@ -24,18 +24,25 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User add(UserDto user) {
+        User newUser = new User();
         // 校验密码和确认密码是否一致
         if (!(user.getPasswordHash().equals(user.getConfirmPassword()))) {
-            throw new IllegalArgumentException("密码与确认密码不一致");
+            newUser.setUserName("密码与确认密码不一致001");
+            return newUser;
+//            throw new IllegalArgumentException("密码与确认密码不一致");
         }
         // 1. 检查用户名是否重复
         if (userRepository.existsByUserName((user.getUserName())) ){
-            throw new ValidationException("用户名已存在");
+            newUser.setUserName("用户名已经存在001");
+            return newUser;
+//            throw new ValidationException("用户名已存在");
         }
 
         // 2. 检查身份证号是否重复
         if (userRepository.existsByIdNumber((user.getIdNumber()))) {
-            throw new ValidationException("身份证号已存在");
+            newUser.setUserName("身份证号已存在001");
+            return newUser;
+//            throw new ValidationException("身份证号已存在");
         }
         User userPojo = new User();
         //复制到user实体类

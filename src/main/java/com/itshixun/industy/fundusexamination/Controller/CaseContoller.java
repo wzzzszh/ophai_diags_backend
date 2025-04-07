@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/case")
@@ -46,6 +47,9 @@ public class CaseContoller {
         String[] diseaseNameArray = diseaseName.split(",");
 
         PageBean<CaseLibDto> pb = caseService.getCaseListByPage(pageNum,pageSize,diagStatus,diseaseNameArray,patientInfoPatientId);
+        if(pb.getTotal()==0){
+            return ResponseMessage.allError(409,"没有查询到病例");
+        }
         return ResponseMessage.success(pb);
     }
     //添加病例
@@ -98,7 +102,6 @@ public class CaseContoller {
         for (Object[] objArray : normalDiagList) {
             NormalDiagDto normalDiag = new NormalDiagDto();
             // 假设Object[]数组中的元素顺序与NormalDiag属性顺序对应
-            // 这里需要根据实际情况调整索引和赋值逻辑
             normalDiag.setCreateDate((LocalDateTime) objArray[0]);
             normalDiag.setNDiagId((String) objArray[1]);
             normalDiag.setDocSuggestions((String) objArray[2]);
@@ -111,6 +114,15 @@ public class CaseContoller {
         String[] diseaseName = casePojo.getDiseaseName();
         String patientId = casePojo.getPatientInfo().getPatientId();
         PageBean<historyCaseListDto> pb = caseService.getHistoryCaseListByPage(patientId);
+        // 过滤当前病例ID
+        List<historyCaseListDto> filteredList = pb.getItems().stream()
+                .filter(dto -> !dto.getCaseId().equals(casePojo.getCaseId()))
+                .collect(Collectors.toList());
+
+        // 创建新的分页对象
+        PageBean<historyCaseListDto> filteredPb = new PageBean<>();
+        filteredPb.setTotal(pb.getTotal() - 1); // 总数减1
+        filteredPb.setItems(filteredList);
 
         if (casePojo == null) {
             return ResponseMessage.allError(416,"病例不存在");
@@ -118,13 +130,14 @@ public class CaseContoller {
         String jsonNodeStr = casePojo.getAiCaseInfo();
         ObjectMapper objectMapper = new ObjectMapper();
         JcaseDto jcaseDto = new JcaseDto();
+        //往dto里面放数据
         try {
             JsonNode jsonNode = objectMapper.readTree(jsonNodeStr);
             BeanUtils.copyProperties(casePojo,jcaseDto);
             //放置json和历史病例、疾病名
             jcaseDto.setDiseaseName(diseaseName);
             jcaseDto.setAiCaseInfoJson(jsonNode);
-            jcaseDto.setHistoryCaseListDto(pb);
+            jcaseDto.setHistoryCaseListDto(filteredPb);
             jcaseDto.setDoctorDiags(normalDiagObjList);
             // 现在你可以使用 jsonNode 对象进行后续操作
         } catch (Exception e) {
@@ -138,7 +151,13 @@ public class CaseContoller {
     public ResponseMessage<String> updateNorCase(@RequestBody CaseDto caseDto) {
         CaseDto CaseNew;
         CaseNew = caseService.updateNorDiag(caseDto);
-        return ResponseMessage.success("修改医嘱成功");
+        if(CaseNew.getDiagStatus()==2) {
+            return ResponseMessage.success("修改医嘱成功");
+        }
+        else
+        {
+            return ResponseMessage.allError(455,"修改医嘱失败");
+        }
     }
     //查询单个患者id历史病例(测试使用)
     @GetMapping("/simpleHis/{patientId}")

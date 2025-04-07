@@ -52,7 +52,9 @@ public class PatientController {
             pageBean = patientService.selectPatientListByPageByName(
                     pageNum, pageSize, target);
         }
-
+        if(pageBean.getTotal()==0) {
+            return ResponseMessage.allError(408,"没有查询到患者");
+        }
         return ResponseMessage.success(pageBean);
     }
     @GetMapping("/batch")

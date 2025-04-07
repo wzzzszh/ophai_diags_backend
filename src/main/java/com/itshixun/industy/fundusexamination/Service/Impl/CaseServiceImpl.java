@@ -4,6 +4,7 @@ package com.itshixun.industy.fundusexamination.Service.Impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.google.gson.JsonObject;
 import com.itshixun.industy.fundusexamination.Service.CaseService;
 import com.itshixun.industy.fundusexamination.Utils.ThreadLocalUtil;
 
@@ -173,13 +174,6 @@ public class CaseServiceImpl implements CaseService {
 
     @Override
     public CaseDto updateNorDiag(CaseDto caseDto) {
-        if(caseDto.getNormalDiag().getDocSuggestions()!=null){
-
-            Map<String,Object> map = ThreadLocalUtil.get();
-            String responsibleDoctor = (String) map.get("userName");
-
-
-        }
         String caseId = caseDto.getCaseId();
         Case aCase = caseRepository.selectById(caseId)
                 .orElseThrow(() -> new RuntimeException("病例不存在 ID：" + caseId));
@@ -191,8 +185,10 @@ public class CaseServiceImpl implements CaseService {
 
             Map<String,Object> map = ThreadLocalUtil.get();
             String responsibleDoctor = (String) map.get("userName");
+            //放置医嘱以及状态转换
             addNormalDiag(caseId, responsibleDoctor, caseDto.getNormalDiag().getDocSuggestions());
             caseDto.getNormalDiag().setDoctorName(responsibleDoctor);
+            caseDto.setDiagStatus(2);
         }
 
         // 更新diseaseName
@@ -211,6 +207,7 @@ public class CaseServiceImpl implements CaseService {
         Page<Case> casePage = caseRepository.findByPatientInfoPatientId(patientId,pageable);
         // 3. 转换为 DTO 并封装到 PageBean
         PageBean<historyCaseListDto> pageBean = convertTohisPageBean(casePage);
+        System.out.println(pageBean.toString());
                 return pageBean;
     }
 
@@ -269,12 +266,20 @@ public class CaseServiceImpl implements CaseService {
         BeanUtils.copyProperties(caseEntity, dto);
         try {
             if (caseEntity.getDiseaseNameJson() != null) {
-                // 移除所有反斜杠并保留双引号
-                String cleanedJson = caseEntity.getDiseaseNameJson()
-                        .replaceAll("\\\\", "");  // 正则表达式匹配所有反斜杠
-                dto.setDiseaseName(cleanedJson);
+                ObjectMapper mapper = new ObjectMapper();
+                String[] diseaseArray = mapper.readValue(caseEntity.getDiseaseNameJson(), String[].class);
+
+                // 处理 ["null"] 的特殊情况
+
+                if(diseaseArray == null || (diseaseArray.length == 1 && "null".equals(diseaseArray[0]))){
+                    dto.setDiseaseName(new String[0]);  // 设置为空数组
+                    System.out.println("空数组"+diseaseArray);
+                } else {
+                    dto.setDiseaseName(diseaseArray);
+                    System.out.println("非空"+diseaseArray);// 直接赋值数组
+                }
             } else {
-                dto.setDiseaseName("[]");  // 空数组的JSON表示
+                dto.setDiseaseName(new String[0]);  // 空数组
             }
         } catch (Exception e) {
             throw new RuntimeException("疾病名称转换失败", e);

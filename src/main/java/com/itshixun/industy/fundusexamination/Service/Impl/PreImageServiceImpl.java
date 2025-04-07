@@ -3,6 +3,7 @@ package com.itshixun.industy.fundusexamination.Service.Impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itshixun.industy.fundusexamination.Service.PreImageService;
 import com.itshixun.industy.fundusexamination.Utils.AliOssUtil;
+import com.itshixun.industy.fundusexamination.Utils.ResponseMessage;
 import com.itshixun.industy.fundusexamination.exception.BusinessException;
 import com.itshixun.industy.fundusexamination.pojo.Case;
 import com.itshixun.industy.fundusexamination.pojo.PatientInfo;
@@ -42,7 +43,7 @@ public class PreImageServiceImpl implements PreImageService {
     @Override
     public ResponseData sendUrltoP(int age ,int gender ,String name, String caseId, String urlLeft, String urlRight) {
         String apiUrl =
-                "https://1a2f-222-195-190-92.ngrok-free.app/api/process-images/";
+                "https://javelin-obliging-physically.ngrok-free.app/api/process-images/";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.add("ngrok-skip-browser-warning", "true"); // 绕过ngrok警告
@@ -56,18 +57,13 @@ public class PreImageServiceImpl implements PreImageService {
         requestBody.put("right_url", urlRight);
         // 修复点：将 headers 和 body 封装到 HttpEntity
         HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
-//        //发送请求体
-//        ResponseEntity<String> response = restTemplate.postForEntity(
-//                apiUrl,
-//                requestEntity,
-//                String.class
-//        );
         try {
             // 打印最终请求体
             String jsonBody = new ObjectMapper().writeValueAsString(requestBody);
-//            System.out.println("完整请求体：\n" + jsonBody);
+
 
             HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers); // 使用String类型body
+            //发送请求到ai
             ResponseEntity<String> response = restTemplate.postForEntity(apiUrl, entity, String.class);
 
             System.out.println("收到响应：" + response.getStatusCode());
@@ -75,7 +71,7 @@ public class PreImageServiceImpl implements PreImageService {
         } catch (Exception e) {
             System.err.println("请求失败：" + e.getMessage());
             e.printStackTrace();
-            return new ResponseData("请求算法服务失败", false);
+            throw new BusinessException(453,"请求Ai失败");
         }
 
 //        //获取返回结果
@@ -134,7 +130,7 @@ public class PreImageServiceImpl implements PreImageService {
             // 用正则表达式匹配文件名格式
             Matcher matcher = pattern.matcher(fileName);
             if (!matcher.matches()) {
-                throw new IllegalArgumentException("Invalid filename format: " + fileName);
+                throw new IllegalArgumentException("不合法文件命名格式 " + fileName);
             }
             // 提取患者ID和类型，并将文件添加到对应的分组中
             String patientId = matcher.group(1);// 第1个括号匹配的内容（患者ID）

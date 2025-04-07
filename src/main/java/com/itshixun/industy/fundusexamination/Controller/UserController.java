@@ -33,6 +33,15 @@ UserController {
     @PostMapping("/register")
     public ResponseMessage<User> addUser(@Validated @RequestBody UserDto user) {
         User userNew = userService.add(user);
+        if (userNew.getUserName().equals("密码与确认密码不一致001")) {
+            return ResponseMessage.allError(406,"密码与确认密码不一致");
+        }
+        if (userNew.getUserName().equals("用户名已经存在001")){
+            return ResponseMessage.allError(407,"用户名已经存在");
+        }
+        if (userNew.getUserName().equals("身份证号已存在001")){
+            return ResponseMessage.allError(408,"身份证号已存在");
+        }
         return ResponseMessage.success(userNew);
     }
 

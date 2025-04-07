@@ -28,7 +28,7 @@ public class RabbitMQConfig {
         return new DirectExchange(IMAGE_PROCESS_EXCHANGE);
     }
 
-    // 新增队列与交换机的绑定
+    // 队列与交换机的绑定
     @Bean
     public Binding bindingImageProcess(Queue imageProcessQueue, DirectExchange imageProcessExchange) {
         return BindingBuilder.bind(imageProcessQueue)
@@ -45,7 +45,7 @@ public class RabbitMQConfig {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
         factory.setMessageConverter(jsonMessageConverter()); // 使用JSON转换器
-        factory.setDefaultRequeueRejected(false); // 拒绝消息时不重新入队
+        factory.setDefaultRequeueRejected(true); // 拒绝消息时重新入队
         return factory;
     }
 
