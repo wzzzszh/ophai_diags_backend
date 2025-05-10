@@ -48,4 +48,6 @@ public interface UserService {
      * @return
      */
     User findByUserId(UserDto user);
+
+    User addAll(UserDto user);
 }

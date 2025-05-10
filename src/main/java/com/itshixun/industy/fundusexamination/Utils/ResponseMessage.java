@@ -34,6 +34,7 @@ public class ResponseMessage<T> {
     }
     //无参接口请求成功
     public static <T> ResponseMessage<T> success() {
+
         return new ResponseMessage(HttpStatus.OK.value(),"success",null);
     }
     //接口请求成功并且返回数据

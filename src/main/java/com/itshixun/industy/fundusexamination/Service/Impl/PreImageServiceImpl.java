@@ -66,18 +66,14 @@ public class PreImageServiceImpl implements PreImageService {
             //发送请求到ai
             ResponseEntity<String> response = restTemplate.postForEntity(apiUrl, entity, String.class);
 
-            System.out.println("收到响应：" + response.getStatusCode());
+            System.out.println("病例ID为"+caseId+"的病例"
+                    +"收到响应：" + response.getStatusCode());
             return new ResponseData(response.getBody(), true);
         } catch (Exception e) {
             System.err.println("请求失败：" + e.getMessage());
             e.printStackTrace();
             throw new BusinessException(453,"请求Ai失败");
         }
-
-//        //获取返回结果
-//        String r = response.getBody();
-//        //将所有属性保存到case里面
-//        return new ResponseData(r,true);
     }
 
     /**已经弃用

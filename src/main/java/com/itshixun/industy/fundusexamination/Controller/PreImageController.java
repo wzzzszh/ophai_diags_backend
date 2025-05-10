@@ -33,8 +33,6 @@ public class PreImageController {
     @Autowired
     public PreImageService preImageService;
     @Autowired
-    public RabbitMQConfig rabbitMQConfig;
-    @Autowired
     public RabbitTemplate rabbitTemplate;
 
     /**

@@ -5,6 +5,7 @@ import com.itshixun.industy.fundusexamination.Service.UserService;
 import com.itshixun.industy.fundusexamination.Utils.JwtUtil;
 import com.itshixun.industy.fundusexamination.Utils.ResponseMessage;
 import com.itshixun.industy.fundusexamination.Utils.ThreadLocalUtil;
+import com.itshixun.industy.fundusexamination.exception.BusinessException;
 import com.itshixun.industy.fundusexamination.pojo.User;
 import com.itshixun.industy.fundusexamination.pojo.dto.LoginUserDto;
 import com.itshixun.industy.fundusexamination.pojo.dto.UserDto;
@@ -29,22 +30,18 @@ UserController {
     private StringRedisTemplate stringRedisTemplate;
     @Autowired
     private UserService userService;
-    //注册
+    //注册管理员
     @PostMapping("/register")
     public ResponseMessage<User> addUser(@Validated @RequestBody UserDto user) {
         User userNew = userService.add(user);
-        if (userNew.getUserName().equals("密码与确认密码不一致001")) {
-            return ResponseMessage.allError(406,"密码与确认密码不一致");
-        }
-        if (userNew.getUserName().equals("用户名已经存在001")){
-            return ResponseMessage.allError(407,"用户名已经存在");
-        }
-        if (userNew.getUserName().equals("身份证号已存在001")){
-            return ResponseMessage.allError(408,"身份证号已存在");
-        }
         return ResponseMessage.success(userNew);
     }
-
+    //注册医生、科研人员、病人
+    @PostMapping("/otherRegister")
+    public ResponseMessage<User> addUserAll(@Validated @RequestBody UserDto user) {
+        User userNew = userService.addAll(user);
+        return ResponseMessage.success(userNew);
+    }
     //登录
     @PostMapping("/login")
     public ResponseMessage<LoginUserDto> login( @RequestBody UserDto user) {
@@ -62,10 +59,15 @@ UserController {
             Map<String,Object> claims = new HashMap<>();
             claims.put("userId", userNew.getUserId());
             claims.put("userName", userNew.getUserName());
+            claims.put("permission", userNew.getPermission());
             String token = JwtUtil.genToken(claims);
             //token存储到redis
             ValueOperations<String, String> operations = stringRedisTemplate.opsForValue();
-            operations.set(token, token,1, TimeUnit.DAYS);
+            try {
+                operations.set(token, token,1, TimeUnit.DAYS);
+            } catch (Exception e) {
+                throw new BusinessException(461,"redis服务器出现问题");
+            }
             LoginUserDto loginUserDto = new LoginUserDto();
             BeanUtils.copyProperties(userNew,loginUserDto);
             loginUserDto.setToken(token);

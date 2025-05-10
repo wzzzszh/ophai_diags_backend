@@ -1,10 +1,12 @@
 package com.itshixun.industy.fundusexamination.Controller;
 
 
+import com.itshixun.industy.fundusexamination.Interface.UserPermission;
 import com.itshixun.industy.fundusexamination.Service.CaseService;
 import com.itshixun.industy.fundusexamination.Service.PatientService;
 import com.itshixun.industy.fundusexamination.Utils.ResponseMessage;
 import com.itshixun.industy.fundusexamination.pojo.Case;
+import com.itshixun.industy.fundusexamination.pojo.Enum.UserPermissionEnum;
 import com.itshixun.industy.fundusexamination.pojo.PageBean;
 import com.itshixun.industy.fundusexamination.pojo.PatientInfo;
 import com.itshixun.industy.fundusexamination.pojo.dto.CaseDto;
@@ -57,12 +59,24 @@ public class PatientController {
         }
         return ResponseMessage.success(pageBean);
     }
+
+    /**
+     * 根据patientId查询历史病例库列表
+     * @param patientId
+     * @return
+     */
     @GetMapping("/batch")
     public ResponseMessage<PageBean<historyCaseListDto>> batchSelectPatientList(
             @RequestParam(required = false) String patientId){
         PageBean<historyCaseListDto> pageBean = caseService.getHistoryCaseListByPage(patientId);
         return ResponseMessage.success(pageBean);
     }
+    /**
+     * 修改患者信息
+     * @param patientDto
+     * @return
+     */
+    @UserPermission(UserPermissionEnum.ADMIN)
     @PostMapping("/update")
     public ResponseMessage<patientDto> updatePatient(@RequestBody patientDto patientDto) {
 
@@ -70,6 +84,12 @@ public class PatientController {
         patientDto.setCreateDate(patientInfo.getCreateDate());
         return ResponseMessage.success(patientDto);
     }
+    /**
+     * 删除患者信息
+     * @param patientId
+     * @return
+     */
+    @UserPermission(UserPermissionEnum.ADMIN)
     @GetMapping("delete")
     public ResponseMessage<patientDto> deletePatient(@RequestParam String patientId) {
         if(patientService.delete(patientId)){
@@ -77,6 +97,12 @@ public class PatientController {
         }
         return ResponseMessage.allError(521,patientId);
     }
+    /**
+     * 添加患者信息
+     * @param patientDto
+     * @return
+     */
+    @UserPermission(UserPermissionEnum.ADMIN)
     @PostMapping("/add")
     public ResponseMessage<patientDto> addPatient(@RequestBody patientDto patientDto) {
         PatientInfo patientInfo = new PatientInfo();

@@ -17,8 +17,6 @@ public class ChartController {
     public ResponseMessage<chartDto> selectChart() {
 
         chartDto chartDto = chartService.selectAll();
-
-
         return ResponseMessage.success(chartDto);
 
 

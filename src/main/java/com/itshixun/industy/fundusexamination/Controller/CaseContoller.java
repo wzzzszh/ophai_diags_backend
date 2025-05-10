@@ -2,11 +2,13 @@ package com.itshixun.industy.fundusexamination.Controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.itshixun.industy.fundusexamination.Interface.UserPermission;
 import com.itshixun.industy.fundusexamination.Service.CaseService;
 import com.itshixun.industy.fundusexamination.Utils.ResponseMessage;
 import com.itshixun.industy.fundusexamination.Utils.ThreadLocalUtil;
 import com.itshixun.industy.fundusexamination.exception.GlobalExceptionHanderAdvice;
 import com.itshixun.industy.fundusexamination.pojo.Case;
+import com.itshixun.industy.fundusexamination.pojo.Enum.UserPermissionEnum;
 import com.itshixun.industy.fundusexamination.pojo.NormalDiag;
 import com.itshixun.industy.fundusexamination.pojo.PageBean;
 import com.itshixun.industy.fundusexamination.pojo.dto.*;
@@ -35,6 +37,7 @@ public class CaseContoller {
     @Autowired
     private NormalDiagRepository normalDiagRepository;
     //分页查询病例列表
+    @UserPermission({UserPermissionEnum.ADMIN,UserPermissionEnum.DOCTOR})
     @GetMapping("/list")
     public ResponseMessage <PageBean<CaseLibDto>> getCaseListByPage(
             Integer pageNum,

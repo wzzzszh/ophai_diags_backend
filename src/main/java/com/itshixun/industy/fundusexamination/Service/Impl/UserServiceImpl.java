@@ -4,6 +4,7 @@ package com.itshixun.industy.fundusexamination.Service.Impl;
 import com.itshixun.industy.fundusexamination.Service.UserService;
 import com.itshixun.industy.fundusexamination.Utils.Md5Util;
 import com.itshixun.industy.fundusexamination.Utils.ThreadLocalUtil;
+import com.itshixun.industy.fundusexamination.exception.BusinessException;
 import com.itshixun.industy.fundusexamination.pojo.User;
 import com.itshixun.industy.fundusexamination.pojo.dto.UserDto;
 import com.itshixun.industy.fundusexamination.repository.UserRepository;
@@ -27,22 +28,26 @@ public class UserServiceImpl implements UserService {
         User newUser = new User();
         // 校验密码和确认密码是否一致
         if (!(user.getPasswordHash().equals(user.getConfirmPassword()))) {
-            newUser.setUserName("密码与确认密码不一致001");
-            return newUser;
+//            newUser.setUserName("密码与确认密码不一致001");
+//            return newUser;
 //            throw new IllegalArgumentException("密码与确认密码不一致");
+            throw new BusinessException(406,"密码与确认密码不一致");
         }
         // 1. 检查用户名是否重复
         if (userRepository.existsByUserName((user.getUserName())) ){
-            newUser.setUserName("用户名已经存在001");
-            return newUser;
+//            newUser.setUserName("用户名已经存在001");
+//            return newUser;
 //            throw new ValidationException("用户名已存在");
+            throw new BusinessException(407,"用户名已经存在");
+
         }
 
         // 2. 检查身份证号是否重复
         if (userRepository.existsByIdNumber((user.getIdNumber()))) {
-            newUser.setUserName("身份证号已存在001");
-            return newUser;
+//            newUser.setUserName("身份证号已存在001");
+//            return newUser;
 //            throw new ValidationException("身份证号已存在");
+            throw new BusinessException(408,"身份证号已存在");
         }
         User userPojo = new User();
         //复制到user实体类
@@ -78,6 +83,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User findByUserName(UserDto user) {
         User userPojo = userRepository.findByUserName(user.getUserName());
+        System.out.println("service层查询用户"+userPojo);
         return userPojo;
     }
 
@@ -95,5 +101,36 @@ public class UserServiceImpl implements UserService {
     public User findByUserId(UserDto user) {
         User userPojo = userRepository.findByUserId(user.getUserId());
         return userPojo;
+    }
+
+    @Override
+    public User addAll(UserDto user) {
+        User newUser = new User();
+
+        if (!(user.getPasswordHash().equals(user.getConfirmPassword()))) {
+
+            throw new BusinessException(406,"密码与确认密码不一致");
+        }
+        // 1. 检查用户名是否重复
+        if (userRepository.existsByUserName((user.getUserName())) ){
+
+            throw new BusinessException(407,"用户名已经存在");
+
+        }
+
+        // 2. 检查身份证号是否重复
+        if (userRepository.existsByIdNumber((user.getIdNumber()))) {
+
+            throw new BusinessException(408,"身份证号已存在");
+        }
+        User userPojo = new User();
+        //复制到user实体类
+        BeanUtils.copyProperties(user, userPojo);
+        String transPassword = Md5Util.getMD5String(userPojo.getPasswordHash());
+        userPojo.setPasswordHash(transPassword);
+        if(userPojo.getPermission() == 4){
+            throw new BusinessException(409,"无法注册管理员账号");
+        }
+        return userRepository.save(userPojo);
     }
 }

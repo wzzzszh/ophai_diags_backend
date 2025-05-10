@@ -35,7 +35,7 @@ public class RabbitMQConfig {
                 .to(imageProcessExchange)
                 .with(ROUTING_KEY);
     }
-    // 原有队列声明保持不变
+    // 队列声明
     @Bean
     public Queue imageProcessQueue() {
         return new Queue(IMAGE_PROCESS_QUEUE, true); // 持久化队列

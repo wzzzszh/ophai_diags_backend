@@ -38,7 +38,7 @@ public class ImageProcessConsumer {
 
             if (!responseData.getSuccess()) {
                 // 处理失败逻辑（重试/记录日志等）
-                throw new RuntimeException("AI诊断失败");
+                throw new RuntimeException("病例ID为" +message.getCaseId()+ "的病例AI诊断失败");
             }
             // 更新数据库状态
             Case managedCase = caseService.getCaseById(message.getCaseId()); // 重新获取托管状态的实体
@@ -54,6 +54,7 @@ public class ImageProcessConsumer {
             // 记录完整错误日志
             e.printStackTrace();
             // 添加重试逻辑或死信队列处理
+
         }
     }
 }
