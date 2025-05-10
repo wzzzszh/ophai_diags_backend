@@ -19,19 +19,18 @@ public class LoginInterceptor implements HandlerInterceptor {
     private StringRedisTemplate stringRedisTemplate;
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        //令牌验证
-        String token = request.getHeader("Authorization");
-        //判断token是否存在
-        ValueOperations<String, String> operations = stringRedisTemplate.opsForValue();
-        System.out.println(token);
-        String tokenRedis = operations.get(token);
-        if(tokenRedis == null){
-            //401
-            ResponseMessage.loginRedisError();
-            return false;
-        }
-        //
         try {
+            //令牌验证
+            String token = request.getHeader("Authorization");
+            //判断token是否存在
+            ValueOperations<String, String> operations = stringRedisTemplate.opsForValue();
+            System.out.println(token);
+            String tokenRedis = operations.get(token);
+            if(tokenRedis == null){
+                //401
+                ResponseMessage.loginRedisError();
+                return false;
+            }
             Map<String, Object> claims = JwtUtil.parseToken(token);
             //把业务数据存到里面
             ThreadLocalUtil.set(claims);

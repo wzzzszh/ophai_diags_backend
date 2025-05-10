@@ -18,7 +18,7 @@ spring:
   data:
     redis:
       host: ${ip}
-      port: 6379
+      port: 6380
   rabbitmq:
     host: ${ip}
     port: 5672

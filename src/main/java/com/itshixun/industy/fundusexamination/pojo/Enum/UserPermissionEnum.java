@@ -1,8 +1,11 @@
 package com.itshixun.industy.fundusexamination.pojo.Enum;
 
+import lombok.Getter;
+
 /**
  * 用户权限枚举类，定义不同的用户权限级别。
  */
+@Getter
 public enum UserPermissionEnum {
     // 权限
     ADMIN(4, "管理员权限"),
@@ -18,13 +21,6 @@ public enum UserPermissionEnum {
         this.description = description;
     }
 
-    public int getCode() {
-        return code;
-    }
-
-    public String getDescription() {
-        return description;
-    }
     public static UserPermissionEnum getByCode(int code) {
         for (UserPermissionEnum permission : values()) {
             if (permission.code == code) {

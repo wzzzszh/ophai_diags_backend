@@ -38,7 +38,7 @@ public class GlobalExceptionHanderAdvice {
 
         // 记录带定位信息的日志
         log.error("【异常定位】类：{} 方法：{}", className, methodName, e);
-        return new ResponseMessage(500,"error",null);
+        return new ResponseMessage(500,"服务器错误，请稍候再试",null);
     }
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseMessage handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {

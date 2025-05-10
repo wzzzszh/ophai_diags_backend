@@ -15,7 +15,7 @@ public class ResponseMessage<T> {
     }
     //登录认证失败
     public static <T> ResponseMessage<T> loginerror() {
-        throw new BusinessException(401,"登录认证失败");
+        throw new BusinessException(401,"未登录");
     }
     public static <T> ResponseMessage<T> loginRedisError() {
         throw new BusinessException(402,"redis登录认证失败");
