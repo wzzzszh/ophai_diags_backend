@@ -41,7 +41,7 @@ public class SecurityAOP {
 //        System.out.println("恭喜你获取到了注解value："+requiredPermission);
         //从ThreadLocal中获取用户信息
         Map<String, Object> claims = ThreadLocalUtil.get();
-        UserPermissionEnum permission =  UserPermissionEnum.getByCode((int) claims.get("permission"));
+        UserPermissionEnum permission =  UserPermissionEnum.getByCode((Integer) claims.get("permission"));
 
 //        UserDto userDto = new UserDto();
 //        userDto.setUserId(userId);
