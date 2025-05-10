@@ -3,26 +3,25 @@ package com.itshixun.industy.fundusexamination.Service.Impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import com.google.gson.JsonObject;
 import com.itshixun.industy.fundusexamination.Service.CaseService;
 import com.itshixun.industy.fundusexamination.Utils.ThreadLocalUtil;
-
 import com.itshixun.industy.fundusexamination.pojo.*;
 import com.itshixun.industy.fundusexamination.pojo.dto.CaseDto;
 import com.itshixun.industy.fundusexamination.pojo.dto.CaseLibDto;
 import com.itshixun.industy.fundusexamination.pojo.dto.historyCaseListDto;
 import com.itshixun.industy.fundusexamination.repository.*;
 import jakarta.transaction.Transactional;
-
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.data.domain.Page;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 @Transactional
 @Service
@@ -35,6 +34,8 @@ public class CaseServiceImpl implements CaseService {
     private NormalDiagRepository normalDiagRepository;
     @Autowired
     private PatientInfoRepository patientInfoRepository;
+    @Autowired
+    private MarkRepository markRepository;
     @Override
     public Case add(CaseDto caseDto) {
             OriginImageData origin = new OriginImageData();
@@ -214,6 +215,11 @@ public class CaseServiceImpl implements CaseService {
     @Override
     public List<Object[]> getNormalDiagByCaseId(String caseId) {
         return normalDiagRepository.findNormalDiagsByCaseId(caseId);
+    }
+
+    @Override
+    public List<Mark> getMarksByCaseId(String caseId) {
+        return markRepository.findAllByCaseEntity_caseId(caseId);
     }
 
     private PageBean<CaseLibDto> convertToPageBean(Page<Case> casePage) {

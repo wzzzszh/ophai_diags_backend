@@ -6,15 +6,15 @@ import com.itshixun.industy.fundusexamination.Interface.UserPermission;
 import com.itshixun.industy.fundusexamination.Service.CaseService;
 import com.itshixun.industy.fundusexamination.Utils.ResponseMessage;
 import com.itshixun.industy.fundusexamination.Utils.ThreadLocalUtil;
+import com.itshixun.industy.fundusexamination.exception.BusinessException;
 import com.itshixun.industy.fundusexamination.exception.GlobalExceptionHanderAdvice;
 import com.itshixun.industy.fundusexamination.pojo.Case;
 import com.itshixun.industy.fundusexamination.pojo.Enum.UserPermissionEnum;
+import com.itshixun.industy.fundusexamination.pojo.Mark;
 import com.itshixun.industy.fundusexamination.pojo.NormalDiag;
 import com.itshixun.industy.fundusexamination.pojo.PageBean;
 import com.itshixun.industy.fundusexamination.pojo.dto.*;
-//import com.itshixun.industy.fundusexamination.pojo.dto.CaseLibDto;
 import com.itshixun.industy.fundusexamination.repository.NormalDiagRepository;
-import org.hibernate.query.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -133,6 +132,11 @@ public class CaseContoller {
         String jsonNodeStr = casePojo.getAiCaseInfo();
         ObjectMapper objectMapper = new ObjectMapper();
         JcaseDto jcaseDto = new JcaseDto();
+        List<Mark> marks = caseService.getMarksByCaseId(caseId);
+        // 将marks中的所有CaseEntity设置为null
+        for (Mark mark : marks) {
+            mark.setCaseEntity(null);
+        }
         //往dto里面放数据
         try {
             JsonNode jsonNode = objectMapper.readTree(jsonNodeStr);
@@ -142,9 +146,11 @@ public class CaseContoller {
             jcaseDto.setAiCaseInfoJson(jsonNode);
             jcaseDto.setHistoryCaseListDto(filteredPb);
             jcaseDto.setDoctorDiags(normalDiagObjList);
+            jcaseDto.setMarks(marks);
             // 现在你可以使用 jsonNode 对象进行后续操作
         } catch (Exception e) {
             e.printStackTrace();
+            throw new BusinessException(420,"json解析失败");
         }
         System.out.println(jcaseDto);
         return ResponseMessage.success(jcaseDto);

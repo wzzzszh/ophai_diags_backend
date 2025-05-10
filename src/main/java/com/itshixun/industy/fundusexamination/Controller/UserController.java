@@ -4,9 +4,9 @@ package com.itshixun.industy.fundusexamination.Controller;
 import com.itshixun.industy.fundusexamination.Service.UserService;
 import com.itshixun.industy.fundusexamination.Utils.JwtUtil;
 import com.itshixun.industy.fundusexamination.Utils.ResponseMessage;
-import com.itshixun.industy.fundusexamination.Utils.ThreadLocalUtil;
 import com.itshixun.industy.fundusexamination.exception.BusinessException;
 import com.itshixun.industy.fundusexamination.pojo.User;
+import com.itshixun.industy.fundusexamination.pojo.dto.CreateUserByAdminDTO;
 import com.itshixun.industy.fundusexamination.pojo.dto.LoginUserDto;
 import com.itshixun.industy.fundusexamination.pojo.dto.UserDto;
 import org.springframework.beans.BeanUtils;
@@ -32,14 +32,14 @@ UserController {
     private UserService userService;
     //注册管理员
     @PostMapping("/register")
-    public ResponseMessage<User> addUser(@Validated @RequestBody UserDto user) {
-        User userNew = userService.add(user);
+    public ResponseMessage<User> addAdmin(@Validated @RequestBody UserDto user) {
+        User userNew = userService.addAdmin(user);
         return ResponseMessage.success(userNew);
     }
     //注册医生、科研人员、病人
     @PostMapping("/otherRegister")
-    public ResponseMessage<User> addUserAll(@Validated @RequestBody UserDto user) {
-        User userNew = userService.addAll(user);
+    public ResponseMessage<User> addOther(@Validated @RequestBody CreateUserByAdminDTO user) {
+        User userNew = userService.addOther(user);
         return ResponseMessage.success(userNew);
     }
     //登录

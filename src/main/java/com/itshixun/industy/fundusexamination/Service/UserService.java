@@ -1,6 +1,7 @@
 package com.itshixun.industy.fundusexamination.Service;
 
 import com.itshixun.industy.fundusexamination.pojo.User;
+import com.itshixun.industy.fundusexamination.pojo.dto.CreateUserByAdminDTO;
 import com.itshixun.industy.fundusexamination.pojo.dto.UserDto;
 
 public interface UserService {
@@ -8,7 +9,7 @@ public interface UserService {
      * 增加用户
      * @param user
      */
-    User add(UserDto user);
+    User addAdmin(UserDto user);
 
     /**
      * 查询用户
@@ -49,5 +50,5 @@ public interface UserService {
      */
     User findByUserId(UserDto user);
 
-    User addAll(UserDto user);
+    User addOther(CreateUserByAdminDTO user);
 }

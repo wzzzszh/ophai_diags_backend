@@ -1,19 +1,11 @@
 package com.itshixun.industy.fundusexamination.pojo.dto;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
 
-/**
- * 用户DTO
- */
 @Data
-public class UserDto {
-    // 用户ID
-    private String userId;
+public class CreateUserByAdminDTO {
     // 用户名
     @NotBlank(message = "用户名不能为空")
     @Pattern(regexp = "^[\\u4e00-\\u9fa5·•]{2,}$",
@@ -21,17 +13,7 @@ public class UserDto {
     @Length(min = 2, max = 20,message = "用户名长度不能少于2位")
     private String userName;
     // SHA256加密密码
-    @NotBlank(message = "密码不能为空")
-    @Length(min = 6, max = 14,message = "密码长度不能少于6位")
-    @Pattern(regexp = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)[\\w!@#$%^&*()_+\\-=\\[\\]{};':\",.<>/?]{6,16}$",
-            message = "密码必须包含大小写字母和数字，不可包含空格")
-    private String passwordHash;
-    // 确认密码（仅用于注册/修改密码时校验，不存储）
-    @NotBlank(message = "确认密码不能为空")
-    @Size(min = 6, max = 14, message = "密码长度必须在6到14位之间")
-    @Pattern(regexp = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)[\\w!@#$%^&*()_+\\-=\\[\\]{};':\",.<>/?]{6,16}$",
-            message = "密码必须包含大小写字母和数字，不可包含空格")
-    private String confirmPassword;
+    private String passwordHash = "123456";
     // 身份证号
     @NotBlank(message = "身份号不能为空")
     @Size(min = 18, max = 18, message = "身份号必须为18位")
@@ -59,17 +41,14 @@ public class UserDto {
     private int gender;
     // 年龄
     private int age;
-    // 所在医院
-    private String hospital;
     // 职位
     private String position;
-    //token
-    private String token;
     // 头像URL
     private String avatarUrl;
-
-    // 邀请码
-    @NotBlank(message = "邀请码不能为空")
-    private String invitationCode;
+    // 权限
+    @NotNull(message = "权限不能为空")
+    @Min(value = 1, message = "权限必须大于等于1")
+    @Max(value = 3, message = "权限必须小于等于3")
+    private int permission;
 
 }

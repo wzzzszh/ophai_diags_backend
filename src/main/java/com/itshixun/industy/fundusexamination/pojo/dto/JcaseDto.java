@@ -42,4 +42,6 @@ public class JcaseDto {
     private LocalDateTime createDate;
     //更新时间
     private LocalDateTime updateDate;
+    // 批注列表
+    private List<Mark> marks;
 }

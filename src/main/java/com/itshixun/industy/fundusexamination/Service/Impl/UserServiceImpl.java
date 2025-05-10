@@ -5,11 +5,13 @@ import com.itshixun.industy.fundusexamination.Service.UserService;
 import com.itshixun.industy.fundusexamination.Utils.Md5Util;
 import com.itshixun.industy.fundusexamination.Utils.ThreadLocalUtil;
 import com.itshixun.industy.fundusexamination.exception.BusinessException;
+import com.itshixun.industy.fundusexamination.pojo.InvitationCode;
 import com.itshixun.industy.fundusexamination.pojo.User;
+import com.itshixun.industy.fundusexamination.pojo.dto.CreateUserByAdminDTO;
 import com.itshixun.industy.fundusexamination.pojo.dto.UserDto;
+import com.itshixun.industy.fundusexamination.repository.InvitationCodeRepository;
 import com.itshixun.industy.fundusexamination.repository.UserRepository;
 import jakarta.transaction.Transactional;
-import jakarta.validation.ValidationException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,9 +25,11 @@ public class UserServiceImpl implements UserService {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    InvitationCodeRepository invitationCodeRepository;
+
     @Override
-    public User add(UserDto user) {
-        User newUser = new User();
+    public User addAdmin(UserDto user) {
         // 校验密码和确认密码是否一致
         if (!(user.getPasswordHash().equals(user.getConfirmPassword()))) {
 //            newUser.setUserName("密码与确认密码不一致001");
@@ -49,12 +53,23 @@ public class UserServiceImpl implements UserService {
 //            throw new ValidationException("身份证号已存在");
             throw new BusinessException(408,"身份证号已存在");
         }
+        InvitationCode code = invitationCodeRepository.findByCode(user.getInvitationCode());
+        if(code == null){
+            throw new BusinessException(409,"邀请码不存在");
+        }
         User userPojo = new User();
         //复制到user实体类
         BeanUtils.copyProperties(user, userPojo);
         String transPassword = Md5Util.getMD5String(userPojo.getPasswordHash());
         userPojo.setPasswordHash(transPassword);
-        return userRepository.save(userPojo);
+        User saveUser = null;
+        try {
+            saveUser = userRepository.save(userPojo);
+            invitationCodeRepository.delete(code);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return saveUser;
     }
 
     @Override
@@ -99,18 +114,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User findByUserId(UserDto user) {
-        User userPojo = userRepository.findByUserId(user.getUserId());
-        return userPojo;
+        return userRepository.findByUserId(user.getUserId());
     }
 
     @Override
-    public User addAll(UserDto user) {
-        User newUser = new User();
+    public User addOther(CreateUserByAdminDTO user) {
 
-        if (!(user.getPasswordHash().equals(user.getConfirmPassword()))) {
-
-            throw new BusinessException(406,"密码与确认密码不一致");
-        }
         // 1. 检查用户名是否重复
         if (userRepository.existsByUserName((user.getUserName())) ){
 
@@ -123,9 +132,15 @@ public class UserServiceImpl implements UserService {
 
             throw new BusinessException(408,"身份证号已存在");
         }
+        Map<String,Object> map = ThreadLocalUtil.get();
+        String userId = (String) map.get("userId");
+        User thisUser = getUser(userId);
+
         User userPojo = new User();
+
         //复制到user实体类
         BeanUtils.copyProperties(user, userPojo);
+        userPojo.setHospital(thisUser.getHospital());
         String transPassword = Md5Util.getMD5String(userPojo.getPasswordHash());
         userPojo.setPasswordHash(transPassword);
         if(userPojo.getPermission() == 4){

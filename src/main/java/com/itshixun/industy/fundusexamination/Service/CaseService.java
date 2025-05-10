@@ -1,9 +1,6 @@
 package com.itshixun.industy.fundusexamination.Service;
 
-import com.itshixun.industy.fundusexamination.pojo.Case;
-import com.itshixun.industy.fundusexamination.pojo.NormalDiag;
-import com.itshixun.industy.fundusexamination.pojo.PageBean;
-import com.itshixun.industy.fundusexamination.pojo.User;
+import com.itshixun.industy.fundusexamination.pojo.*;
 import com.itshixun.industy.fundusexamination.pojo.dto.CaseDto;
 import com.itshixun.industy.fundusexamination.pojo.dto.CaseLibDto;
 import com.itshixun.industy.fundusexamination.pojo.dto.historyCaseListDto;
@@ -59,4 +56,7 @@ public interface CaseService {
     PageBean<historyCaseListDto> getHistoryCaseListByPage(String patientId);
 
     List<Object[]> getNormalDiagByCaseId(String caseId);
+
+    List<Mark> getMarksByCaseId(String caseId);
+
 }
