@@ -1,0 +1,39 @@
+server:
+  port: 8088
+
+spring:
+  profiles:
+    active: dev
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${ip}:3306/ophai_backend?useUnicode=true&characterEncoding=utf-8&useSSL=false
+    username: ophai_backend
+    password: sunhao88586906
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: update
+  data:
+    redis:
+      host: ${ip}
+      port: 6379
+  rabbitmq:
+    host: ${ip}
+    port: 5672
+    username: guest
+    password: guest
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+ali:
+  oss:
+    endpoint: ${ALI_OSS_ENDPOINT}
+    accessKeyId: ${ALI_OSS_ACCESS_KEY_ID}
+    secretAccessKey: ${ALI_OSS_SECRET_ACCESS_KEY}
+
+ip: 120.55.183.84

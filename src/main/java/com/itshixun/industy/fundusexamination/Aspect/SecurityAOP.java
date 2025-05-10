@@ -1,19 +1,15 @@
 package com.itshixun.industy.fundusexamination.Aspect;
 
 import com.itshixun.industy.fundusexamination.Interface.UserPermission;
-import com.itshixun.industy.fundusexamination.Service.UserService;
 import com.itshixun.industy.fundusexamination.Utils.ThreadLocalUtil;
 import com.itshixun.industy.fundusexamination.exception.BusinessException;
 import com.itshixun.industy.fundusexamination.pojo.Enum.UserPermissionEnum;
-import com.itshixun.industy.fundusexamination.pojo.User;
-import com.itshixun.industy.fundusexamination.pojo.dto.UserDto;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.aspectj.lang.annotation.Around;
 
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -22,8 +18,7 @@ import java.util.Map;
 @Aspect
 public class SecurityAOP {
 
-    @Autowired
-    private UserService userService;
+
     @Pointcut("@annotation(com.itshixun.industy.fundusexamination.Interface.UserPermission)")
     public void userPermission() {
     }
