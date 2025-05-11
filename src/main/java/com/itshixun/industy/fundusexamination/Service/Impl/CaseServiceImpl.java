@@ -4,6 +4,8 @@ package com.itshixun.industy.fundusexamination.Service.Impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.itshixun.industy.fundusexamination.Interface.AddCache;
+import com.itshixun.industy.fundusexamination.Interface.DelCache;
 import com.itshixun.industy.fundusexamination.Service.CaseService;
 import com.itshixun.industy.fundusexamination.Utils.ThreadLocalUtil;
 import com.itshixun.industy.fundusexamination.exception.BusinessException;
@@ -148,6 +150,7 @@ public class CaseServiceImpl implements CaseService {
         return caseDto;
 //        return null;
     }
+    @DelCache(prefix = "case")
     @Transactional(rollbackOn = Exception.class)
     @Override
     public void delete(String caseId) {
@@ -162,7 +165,6 @@ public class CaseServiceImpl implements CaseService {
     public boolean isPatientExist(String patientId) {
         Optional<PatientInfo> byId = patientInfoRepository.selectById(patientId);
         return byId.isPresent();
-
     }
 
     @Override
@@ -173,15 +175,14 @@ public class CaseServiceImpl implements CaseService {
 
         return aCase1;
     }
-
+    @DelCache(prefix = "case")
     @Override
     @Transactional
-    public CaseUpdateDTO updateNorDiag(CaseUpdateDTO caseDto) {
+    public CaseUpdateDTO updateNorDiag(String caseId,CaseUpdateDTO caseDto) {
         //0.提取属性
         List<Mark> marks = caseDto.getMarks();
         String docSuggestions = caseDto.getNormalDiag().getDocSuggestions();
         //1.查询caseId是否存在
-        String caseId = caseDto.getCaseId();
         Case aCase = caseRepository.selectById(caseId)
                 .orElseThrow(() -> new RuntimeException("病例不存在 ID：" + caseId));
         //2.查询caseId是否已经诊断过,赋值
@@ -208,6 +209,7 @@ public class CaseServiceImpl implements CaseService {
      * @param patientId
      * @return
      */
+    @AddCache(prefix = "case:patient",expire = 60)
     @Override
     public PageBean<historyCaseListDto> getHistoryCaseListByPage(String patientId) {
         Pageable pageable = PageRequest.of(0, 100);
@@ -228,6 +230,12 @@ public class CaseServiceImpl implements CaseService {
         return markRepository.findAllByCaseEntity_caseId(caseId);
     }
 
+    /**
+     * 根据caseId查询病例详情
+     * @param caseId
+     * @return
+     */
+    @AddCache(prefix = "case")
     @Override
     public JcaseDto getRealCaseById(String caseId) {
         Case casePojo = getCaseById(caseId);

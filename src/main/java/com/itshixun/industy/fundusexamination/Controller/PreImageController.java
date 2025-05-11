@@ -158,18 +158,6 @@ public class PreImageController {
             //改名后的文件发送到算法端
             ResponseData responseData = preImageService.sendUrltoP(patientAge,patientGender,patientName, caseId, urlLeft, urlRight);
 
-            // 替换原有的直接调用
-//            // 改为发送消息到队列
-//            rabbitTemplate.convertAndSend(
-//                    RabbitMQConfig.IMAGE_PROCESS_QUEUE,
-//                    new ImageProcessMessage(
-//                            caseNew.getCaseId(),
-//                            urlLeft,
-//                            urlRight,
-//                            patientId
-//                    )
-//            );
-
             String fullJson = responseData.getMessage();
             //判断是否有图片
             if (!responseData.getSuccess()) {

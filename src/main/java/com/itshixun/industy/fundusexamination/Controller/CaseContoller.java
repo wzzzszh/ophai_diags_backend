@@ -124,7 +124,7 @@ public class CaseContoller {
     @PostMapping("/update")
     public ResponseMessage<String> updateNorCase(@RequestBody CaseUpdateDTO caseDto) {
         CaseUpdateDTO CaseNew;
-        CaseNew = caseService.updateNorDiag(caseDto);
+        CaseNew = caseService.updateNorDiag(caseDto.getCaseId(),caseDto);
         if(CaseNew.getDiagStatus()==2) {
             return ResponseMessage.success("修改医嘱成功");
         }

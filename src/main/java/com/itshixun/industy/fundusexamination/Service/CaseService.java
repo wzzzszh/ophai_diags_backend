@@ -49,7 +49,7 @@ public interface CaseService {
 
     Case getCaseById(String caseId);
 
-    CaseUpdateDTO updateNorDiag(CaseUpdateDTO caseDto);
+    CaseUpdateDTO updateNorDiag(String caseId,CaseUpdateDTO caseDto);
 
     PageBean<historyCaseListDto> getHistoryCaseListByPage(String patientId);
 

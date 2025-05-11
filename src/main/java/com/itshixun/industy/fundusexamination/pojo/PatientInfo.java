@@ -8,7 +8,6 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 /**
  * @author 10169
@@ -20,6 +19,7 @@ import java.util.Date;
 @Table(name =  "patient_info")
 @Entity
 @ToString(exclude = "cases")
+//@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class PatientInfo {
     @Id
     @GeneratedValue(
