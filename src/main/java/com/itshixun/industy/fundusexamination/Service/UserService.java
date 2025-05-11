@@ -1,8 +1,10 @@
 package com.itshixun.industy.fundusexamination.Service;
 
+import com.itshixun.industy.fundusexamination.pojo.PageBean;
 import com.itshixun.industy.fundusexamination.pojo.User;
 import com.itshixun.industy.fundusexamination.pojo.dto.CreateUserByAdminDTO;
 import com.itshixun.industy.fundusexamination.pojo.dto.UserDto;
+import com.itshixun.industy.fundusexamination.pojo.dto.UserListDTO;
 
 public interface UserService {
     /**
@@ -51,4 +53,8 @@ public interface UserService {
     User findByUserId(UserDto user);
 
     User addOther(CreateUserByAdminDTO user);
+
+    PageBean<UserListDTO> getNonAdminUsers(Integer pageNum, Integer pageSize);
+
+    UserListDTO updatePermission(String userId, Integer permission);
 }

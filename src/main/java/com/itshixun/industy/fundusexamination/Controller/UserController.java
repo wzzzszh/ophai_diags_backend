@@ -1,14 +1,18 @@
 package com.itshixun.industy.fundusexamination.Controller;
 
 
+import com.itshixun.industy.fundusexamination.Interface.UserPermission;
 import com.itshixun.industy.fundusexamination.Service.UserService;
 import com.itshixun.industy.fundusexamination.Utils.JwtUtil;
 import com.itshixun.industy.fundusexamination.Utils.ResponseMessage;
 import com.itshixun.industy.fundusexamination.exception.BusinessException;
+import com.itshixun.industy.fundusexamination.pojo.Enum.UserPermissionEnum;
+import com.itshixun.industy.fundusexamination.pojo.PageBean;
 import com.itshixun.industy.fundusexamination.pojo.User;
 import com.itshixun.industy.fundusexamination.pojo.dto.CreateUserByAdminDTO;
 import com.itshixun.industy.fundusexamination.pojo.dto.LoginUserDto;
 import com.itshixun.industy.fundusexamination.pojo.dto.UserDto;
+import com.itshixun.industy.fundusexamination.pojo.dto.UserListDTO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -109,5 +113,23 @@ UserController {
         userService.updateAvatar(avatarUrl);
         return ResponseMessage.success("头像上传成功！");
     }
+
+
+    // 分页查询所有非管理员用户
+    @GetMapping("/get/non-admin")
+    @UserPermission(UserPermissionEnum.ADMIN)
+    public ResponseMessage<PageBean<UserListDTO>> getNonAdminUsers(@RequestParam Integer pageNum, @RequestParam Integer pageSize) {
+        PageBean<UserListDTO> users = userService.getNonAdminUsers(pageNum, pageSize);
+        return ResponseMessage.success(users);
+    }
+
+    // 修改用户权限
+    @PutMapping("/permission")
+    @UserPermission(UserPermissionEnum.ADMIN)
+    public ResponseMessage<UserListDTO> updatePermission(@RequestParam String userId, @RequestParam Integer permission) {
+        UserListDTO user = userService.updatePermission(userId, permission);
+        return ResponseMessage.success(user);
+    }
+
 }
 

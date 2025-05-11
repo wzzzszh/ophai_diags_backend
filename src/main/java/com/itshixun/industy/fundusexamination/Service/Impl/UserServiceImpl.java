@@ -1,22 +1,29 @@
 package com.itshixun.industy.fundusexamination.Service.Impl;
 
 
+import cn.hutool.core.bean.BeanUtil;
 import com.itshixun.industy.fundusexamination.Service.UserService;
 import com.itshixun.industy.fundusexamination.Utils.Md5Util;
 import com.itshixun.industy.fundusexamination.Utils.ThreadLocalUtil;
 import com.itshixun.industy.fundusexamination.exception.BusinessException;
+import com.itshixun.industy.fundusexamination.pojo.Enum.UserPermissionEnum;
 import com.itshixun.industy.fundusexamination.pojo.InvitationCode;
+import com.itshixun.industy.fundusexamination.pojo.PageBean;
 import com.itshixun.industy.fundusexamination.pojo.User;
 import com.itshixun.industy.fundusexamination.pojo.dto.CreateUserByAdminDTO;
 import com.itshixun.industy.fundusexamination.pojo.dto.UserDto;
+import com.itshixun.industy.fundusexamination.pojo.dto.UserListDTO;
 import com.itshixun.industy.fundusexamination.repository.InvitationCodeRepository;
 import com.itshixun.industy.fundusexamination.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -147,5 +154,51 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException(409,"无法注册管理员账号");
         }
         return userRepository.save(userPojo);
+    }
+
+    @Override
+    public PageBean<UserListDTO> getNonAdminUsers(Integer pageNum, Integer pageSize) {
+        // 分页查询非管理员用户
+        Page<User> nonAdminUsers = userRepository.findNonAdminUsers(PageRequest.of(pageNum-1, pageSize));
+        // 将 User 转换为 UserListDTO
+        return convertToPageBean(nonAdminUsers);
+
+    }
+
+    @Override
+    public UserListDTO updatePermission(String userId, Integer permission) {
+        if(UserPermissionEnum.ADMIN.getCode() == permission){
+            throw new BusinessException(409,"无法修改为管理员权限");
+        }
+        User user = userRepository.findByUserId(userId);
+        if(user != null){
+            if(user.getPermission() == UserPermissionEnum.ADMIN.getCode()){
+                throw new BusinessException(409,"无法修改管理员权限");
+            }
+            user.setPermission(permission);
+            return BeanUtil.copyProperties(userRepository.save(user), UserListDTO.class);
+        }
+        throw new BusinessException(409,"用户不存在");
+    }
+
+
+    private PageBean<UserListDTO> convertToPageBean(Page<User> casePage) {
+        PageBean<UserListDTO> pb = new PageBean<>();
+        pb.setTotal(casePage.getTotalElements()); // 总记录数
+        pb.setItems(
+                casePage.getContent() // 当前页数据
+                        .stream()
+                        .map(this::convertToDto) // 转换为 DTO
+                        .collect(Collectors.toList())
+        );
+        return pb;
+    }
+
+    private UserListDTO convertToDto(User userEntity) {
+        UserListDTO dto = new UserListDTO();
+        BeanUtils.copyProperties(userEntity, dto);
+        //将实体类里面的diseaseNameJson转换成String[]类型
+        //再存储到dto里面的diseaseName字段
+        return dto;
     }
 }
