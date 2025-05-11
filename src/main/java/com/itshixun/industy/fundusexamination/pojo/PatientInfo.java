@@ -8,7 +8,6 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 /**
  * @author 10169
@@ -41,6 +40,27 @@ public class PatientInfo {
     //患者性别
     @Column(name = "patient_gender")
     private Integer gender;
+
+    //患者电话
+    @Column(name = "patient_phone")
+    private String phone;
+
+    //患者身份证号
+    @Column(name = "patient_idcard")
+    private String idCard;
+
+    //患者地址
+    @Column(name = "patient_address")
+    private String address;
+
+    // 患者医保号
+    @Column(name = "patient_medical_card")
+    private String medicalCard;
+
+    // 紧急联系人电话
+    @Column(name = "patient_emergency_contact")
+    private String emergencyContact;
+
     //创建时间
     @Column(name = "create_date")
     @CreationTimestamp

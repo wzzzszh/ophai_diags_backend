@@ -53,7 +53,13 @@ public class PatientServiceImpl implements PatientService {
                         patient.getName(),
                         patient.getAge(),
                         patient.getGender(),
-                        patient.getCreateDate()))
+                        patient.getPhone(),
+                        patient.getIdCard(),
+                        patient.getAddress(),
+                        patient.getMedicalCard(),
+                        patient.getEmergencyContact(),
+                        patient.getCreateDate()
+                ))
                 .collect(Collectors.toList());
         return new PageBean<>(pageResult.getTotalElements(), dtoList);
 
@@ -85,7 +91,13 @@ public class PatientServiceImpl implements PatientService {
                         patient.getName(),
                         patient.getAge(),
                         patient.getGender(),
-                        patient.getCreateDate()))
+                        patient.getPhone(),
+                        patient.getIdCard(),
+                        patient.getAddress(),
+                        patient.getMedicalCard(),
+                        patient.getEmergencyContact(),
+                        patient.getCreateDate()
+                ))
                 .collect(Collectors.toList());
         return new PageBean<>(pageResult.getTotalElements(), dtoList);
     }
@@ -119,7 +131,13 @@ public class PatientServiceImpl implements PatientService {
                         patient.getName(),
                         patient.getAge(),
                         patient.getGender(),
-                        patient.getCreateDate()))
+                        patient.getPhone(),
+                        patient.getIdCard(),
+                        patient.getAddress(),
+                        patient.getMedicalCard(),
+                        patient.getEmergencyContact(),
+                        patient.getCreateDate()
+                ))
                 .collect(Collectors.toList());
         return new PageBean<>(pageResult.getTotalElements(), dtoList);
 
