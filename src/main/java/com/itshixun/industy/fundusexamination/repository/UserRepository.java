@@ -4,6 +4,9 @@ import com.itshixun.industy.fundusexamination.pojo.User;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -19,4 +22,11 @@ public interface UserRepository extends CrudRepository<User, String> {
             message = "身份号格式不正确，需符合国家标准") String idNumber);
 
     boolean existsByUserName(@NotBlank(message = "用户名不能为空") String userName);
+
+    // 分页查询所有非管理员用户
+    @Query("SELECT u FROM User u " +
+            "WHERE u.permission <> 4" +
+            "ORDER BY u.createDate DESC "
+    )
+    Page<User> findNonAdminUsers(Pageable pageable);
 }
