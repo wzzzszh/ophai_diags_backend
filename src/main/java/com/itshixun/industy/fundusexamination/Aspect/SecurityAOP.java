@@ -31,25 +31,19 @@ public class SecurityAOP {
         // 获取方法上的注解
         UserPermission annotation = method.getAnnotation(UserPermission.class);
         UserPermissionEnum[] requiredPermissions = annotation.value();
-
-//        int requiredPermissionCode = requiredPermission.getCode();
-//        System.out.println("恭喜你获取到了注解value："+requiredPermission);
-        //从ThreadLocal中获取用户信息
+        //从ThreadLocal中获取当前用户信息
         Map<String, Object> claims = ThreadLocalUtil.get();
         UserPermissionEnum permission =  UserPermissionEnum.getByCode((Integer) claims.get("permission"));
-
-//        UserDto userDto = new UserDto();
-//        userDto.setUserId(userId);
-//        User user = userService.findByUserId(userDto);
-//        System.out.println("恭喜你获取到了用户信息："+user);
+        if (permission == UserPermissionEnum.ADMIN) {
+            return joinPoint.proceed();
+        }
         for (UserPermissionEnum requiredPermission : requiredPermissions) {
-            if ( permission  == requiredPermission) {
+            if ( permission  ==  requiredPermission) {
                 break;
             }else {
                 throw new BusinessException(403,"权限不足");
             }
         }
-
         return joinPoint.proceed();
 
     }

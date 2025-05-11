@@ -1,16 +1,12 @@
 package com.itshixun.industy.fundusexamination.Controller;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itshixun.industy.fundusexamination.Interface.UserPermission;
 import com.itshixun.industy.fundusexamination.Service.CaseService;
 import com.itshixun.industy.fundusexamination.Utils.ResponseMessage;
 import com.itshixun.industy.fundusexamination.Utils.ThreadLocalUtil;
-import com.itshixun.industy.fundusexamination.exception.BusinessException;
 import com.itshixun.industy.fundusexamination.exception.GlobalExceptionHanderAdvice;
 import com.itshixun.industy.fundusexamination.pojo.Case;
 import com.itshixun.industy.fundusexamination.pojo.Enum.UserPermissionEnum;
-import com.itshixun.industy.fundusexamination.pojo.Mark;
 import com.itshixun.industy.fundusexamination.pojo.NormalDiag;
 import com.itshixun.industy.fundusexamination.pojo.PageBean;
 import com.itshixun.industy.fundusexamination.pojo.dto.*;
@@ -22,11 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/case")
@@ -35,7 +27,16 @@ public class CaseContoller {
     private CaseService caseService;
     @Autowired
     private NormalDiagRepository normalDiagRepository;
-    //分页查询病例列表
+
+    /**
+     * 分页查询病例列表
+     * @param pageNum
+     * @param pageSize
+     * @param diagStatus
+     * @param diseaseName
+     * @param patientInfoPatientId
+     * @return
+     */
     @UserPermission({UserPermissionEnum.ADMIN,UserPermissionEnum.DOCTOR})
     @GetMapping("/list")
     public ResponseMessage <PageBean<CaseLibDto>> getCaseListByPage(
@@ -47,18 +48,22 @@ public class CaseContoller {
     ) {
 
         String[] diseaseNameArray = diseaseName.split(",");
-
         PageBean<CaseLibDto> pb = caseService.getCaseListByPage(pageNum,pageSize,diagStatus,diseaseNameArray,patientInfoPatientId);
         if(pb.getTotal()==0){
             return ResponseMessage.allError(409,"没有查询到病例");
         }
         return ResponseMessage.success(pb);
     }
-    //添加病例
+
+    /**
+     *  添加病例数据
+     * @param caseDto 病例数据
+     * @return
+     */
+    @UserPermission(UserPermissionEnum.PATIENT)
     @PostMapping
     public ResponseMessage<CaseDto> addCase(@Validated @RequestBody CaseDto caseDto) {
-        Case CaseNew;
-        CaseNew = caseService.add(caseDto);
+        Case CaseNew = caseService.add(caseDto);
         BeanUtils.copyProperties(CaseNew, caseDto);
         return ResponseMessage.success(caseDto);
     }
@@ -69,7 +74,6 @@ public class CaseContoller {
         CaseDto CaseNew;
         if(caseDto.getNormalDiag().getDocSuggestions()!=null){
             NormalDiag normalDiag = new NormalDiag();
-            System.out.println("调试信息");
             Map<String,Object> map = ThreadLocalUtil.get();
             String responsibleDoctor = (String) map.get("userName");
             Logger log = LoggerFactory.getLogger(GlobalExceptionHanderAdvice.class);
@@ -86,79 +90,40 @@ public class CaseContoller {
         CaseNew = caseService.update(caseDto);
         return ResponseMessage.success(CaseNew);
     }
-    //删除病例
+
+    /**
+     *  删除病例数据
+     * @param caseId
+     * @return
+     */
+    @UserPermission(UserPermissionEnum.DOCTOR)
     @PutMapping("/delete/{caseId}")
     public ResponseMessage<CaseDto> deleteCase(@PathVariable String caseId) {
-//        Case CaseNew;
-//        CaseNew = caseService.delete(caseDto);
         caseService.delete(caseId);
         return ResponseMessage.success("删除病例成功");
     }
-    //查询单个病例
+
+    /**
+     * 查询单个病例数据
+     * @param caseId
+     * @return
+     */
+    @UserPermission({UserPermissionEnum.DOCTOR,UserPermissionEnum.PATIENT})
     @GetMapping("/simple/{caseId}")
     public ResponseMessage<JcaseDto> getCaseById(@PathVariable String caseId) {
-        //先查询病例库,并且得到jsonDName,获得历史医嘱列表
-        Case casePojo = caseService.getCaseById(caseId);
-        List<Object[]> normalDiagList = caseService.getNormalDiagByCaseId(caseId);
-        List<NormalDiagDto> normalDiagObjList = new ArrayList<>();
-        for (Object[] objArray : normalDiagList) {
-            NormalDiagDto normalDiag = new NormalDiagDto();
-            // 假设Object[]数组中的元素顺序与NormalDiag属性顺序对应
-            normalDiag.setCreateDate((LocalDateTime) objArray[0]);
-            normalDiag.setNDiagId((String) objArray[1]);
-            normalDiag.setDocSuggestions((String) objArray[2]);
-            normalDiag.setDoctorName((String) objArray[3]);
-            normalDiag.setUpdateDate((LocalDateTime) objArray[4]);
-            // 其他属性赋值...
-            normalDiagObjList.add(normalDiag);
-        }
-
-        String[] diseaseName = casePojo.getDiseaseName();
-        String patientId = casePojo.getPatientInfo().getPatientId();
-        PageBean<historyCaseListDto> pb = caseService.getHistoryCaseListByPage(patientId);
-        // 过滤当前病例ID
-        List<historyCaseListDto> filteredList = pb.getItems().stream()
-                .filter(dto -> !dto.getCaseId().equals(casePojo.getCaseId()))
-                .collect(Collectors.toList());
-
-        // 创建新的分页对象
-        PageBean<historyCaseListDto> filteredPb = new PageBean<>();
-        filteredPb.setTotal(pb.getTotal() - 1); // 总数减1
-        filteredPb.setItems(filteredList);
-
-        if (casePojo == null) {
-            return ResponseMessage.allError(416,"病例不存在");
-        }
-        String jsonNodeStr = casePojo.getAiCaseInfo();
-        ObjectMapper objectMapper = new ObjectMapper();
-        JcaseDto jcaseDto = new JcaseDto();
-        List<Mark> marks = caseService.getMarksByCaseId(caseId);
-        // 将marks中的所有CaseEntity设置为null
-        for (Mark mark : marks) {
-            mark.setCaseEntity(null);
-        }
-        //往dto里面放数据
-        try {
-            JsonNode jsonNode = objectMapper.readTree(jsonNodeStr);
-            BeanUtils.copyProperties(casePojo,jcaseDto);
-            //放置json和历史病例、疾病名
-            jcaseDto.setDiseaseName(diseaseName);
-            jcaseDto.setAiCaseInfoJson(jsonNode);
-            jcaseDto.setHistoryCaseListDto(filteredPb);
-            jcaseDto.setDoctorDiags(normalDiagObjList);
-            jcaseDto.setMarks(marks);
-            // 现在你可以使用 jsonNode 对象进行后续操作
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new BusinessException(420,"json解析失败");
-        }
-        System.out.println(jcaseDto);
+        JcaseDto jcaseDto = caseService.getRealCaseById(caseId);
         return ResponseMessage.success(jcaseDto);
     }
-    //更新病例的医嘱信息
+
+    /**
+     * 更新病例的医嘱信息
+     * @param caseDto
+     * @return
+     */
+    @UserPermission(UserPermissionEnum.DOCTOR)
     @PostMapping("/update")
-    public ResponseMessage<String> updateNorCase(@RequestBody CaseDto caseDto) {
-        CaseDto CaseNew;
+    public ResponseMessage<String> updateNorCase(@RequestBody CaseUpdateDTO caseDto) {
+        CaseUpdateDTO CaseNew;
         CaseNew = caseService.updateNorDiag(caseDto);
         if(CaseNew.getDiagStatus()==2) {
             return ResponseMessage.success("修改医嘱成功");

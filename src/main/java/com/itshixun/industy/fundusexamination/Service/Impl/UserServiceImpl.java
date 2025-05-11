@@ -32,25 +32,19 @@ public class UserServiceImpl implements UserService {
     public User addAdmin(UserDto user) {
         // 校验密码和确认密码是否一致
         if (!(user.getPasswordHash().equals(user.getConfirmPassword()))) {
-//            newUser.setUserName("密码与确认密码不一致001");
-//            return newUser;
-//            throw new IllegalArgumentException("密码与确认密码不一致");
+
             throw new BusinessException(406,"密码与确认密码不一致");
         }
         // 1. 检查用户名是否重复
         if (userRepository.existsByUserName((user.getUserName())) ){
-//            newUser.setUserName("用户名已经存在001");
-//            return newUser;
-//            throw new ValidationException("用户名已存在");
+
             throw new BusinessException(407,"用户名已经存在");
 
         }
 
         // 2. 检查身份证号是否重复
         if (userRepository.existsByIdNumber((user.getIdNumber()))) {
-//            newUser.setUserName("身份证号已存在001");
-//            return newUser;
-//            throw new ValidationException("身份证号已存在");
+
             throw new BusinessException(408,"身份证号已存在");
         }
         InvitationCode code = invitationCodeRepository.findByCode(user.getInvitationCode());
@@ -58,8 +52,9 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException(409,"邀请码不存在");
         }
         User userPojo = new User();
-        //复制到user实体类
+        //3.复制到user实体类
         BeanUtils.copyProperties(user, userPojo);
+        userPojo.setPermission(4);
         String transPassword = Md5Util.getMD5String(userPojo.getPasswordHash());
         userPojo.setPasswordHash(transPassword);
         User saveUser = null;

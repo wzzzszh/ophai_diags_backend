@@ -2,13 +2,13 @@ package com.itshixun.industy.fundusexamination.Service.Impl;
 
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itshixun.industy.fundusexamination.Service.CaseService;
 import com.itshixun.industy.fundusexamination.Utils.ThreadLocalUtil;
+import com.itshixun.industy.fundusexamination.exception.BusinessException;
 import com.itshixun.industy.fundusexamination.pojo.*;
-import com.itshixun.industy.fundusexamination.pojo.dto.CaseDto;
-import com.itshixun.industy.fundusexamination.pojo.dto.CaseLibDto;
-import com.itshixun.industy.fundusexamination.pojo.dto.historyCaseListDto;
+import com.itshixun.industy.fundusexamination.pojo.dto.*;
 import com.itshixun.industy.fundusexamination.repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
@@ -18,10 +18,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.stream.Collectors;
 @Transactional
 @Service
@@ -150,11 +148,14 @@ public class CaseServiceImpl implements CaseService {
         return caseDto;
 //        return null;
     }
-
+    @Transactional(rollbackOn = Exception.class)
     @Override
     public void delete(String caseId) {
-        Case del = new Case();
+        //1.删除case记录
         caseRepository.updateById(caseId);
+        //2.删除mask标注记录
+        markRepository.deleteById(caseId);
+
     }
 
     @Override
@@ -168,26 +169,31 @@ public class CaseServiceImpl implements CaseService {
     public Case getCaseById(String caseId) {
         // 使用orElseThrow处理Optional
         Case aCase1 = caseRepository.selectById(caseId)
-                .orElseThrow(() -> new RuntimeException("病例不存在 ID：" + caseId));
+                .orElseThrow(() -> new BusinessException(421, caseId + " 该病例不存在"));
 
         return aCase1;
     }
 
     @Override
-    public CaseDto updateNorDiag(CaseDto caseDto) {
+    @Transactional
+    public CaseUpdateDTO updateNorDiag(CaseUpdateDTO caseDto) {
+        //0.提取属性
+        List<Mark> marks = caseDto.getMarks();
+        String docSuggestions = caseDto.getNormalDiag().getDocSuggestions();
+        //1.查询caseId是否存在
         String caseId = caseDto.getCaseId();
         Case aCase = caseRepository.selectById(caseId)
                 .orElseThrow(() -> new RuntimeException("病例不存在 ID：" + caseId));
+        //2.查询caseId是否已经诊断过,赋值
         if(caseDto.getDiseaseName()!=null){
             aCase.setDiseaseName(caseDto.getDiseaseName());
             caseRepository.save(aCase);
         }
         if(caseDto.getNormalDiag().getDocSuggestions()!=null){
-
             Map<String,Object> map = ThreadLocalUtil.get();
             String responsibleDoctor = (String) map.get("userName");
             //放置医嘱以及状态转换
-            addNormalDiag(caseId, responsibleDoctor, caseDto.getNormalDiag().getDocSuggestions());
+            addNormalDiag(caseId, responsibleDoctor, docSuggestions,marks);
             caseDto.getNormalDiag().setDoctorName(responsibleDoctor);
             caseDto.setDiagStatus(2);
         }
@@ -208,7 +214,7 @@ public class CaseServiceImpl implements CaseService {
         Page<Case> casePage = caseRepository.findByPatientInfoPatientId(patientId,pageable);
         // 3. 转换为 DTO 并封装到 PageBean
         PageBean<historyCaseListDto> pageBean = convertTohisPageBean(casePage);
-        System.out.println(pageBean.toString());
+//        System.out.println(pageBean.toString());
                 return pageBean;
     }
 
@@ -220,6 +226,65 @@ public class CaseServiceImpl implements CaseService {
     @Override
     public List<Mark> getMarksByCaseId(String caseId) {
         return markRepository.findAllByCaseEntity_caseId(caseId);
+    }
+
+    @Override
+    public JcaseDto getRealCaseById(String caseId) {
+        Case casePojo = getCaseById(caseId);
+        List<Object[]> normalDiagList = getNormalDiagByCaseId(caseId);
+        List<NormalDiagDto> normalDiagObjList = new ArrayList<>();
+        for (Object[] objArray : normalDiagList) {
+            NormalDiagDto normalDiag = new NormalDiagDto();
+            // 假设Object[]数组中的元素顺序与NormalDiag属性顺序对应
+            normalDiag.setCreateDate((LocalDateTime) objArray[0]);
+            normalDiag.setNDiagId((String) objArray[1]);
+            normalDiag.setDocSuggestions((String) objArray[2]);
+            normalDiag.setDoctorName((String) objArray[3]);
+            normalDiag.setUpdateDate((LocalDateTime) objArray[4]);
+            // 其他属性赋值...
+            normalDiagObjList.add(normalDiag);
+        }
+
+        String[] diseaseName = casePojo.getDiseaseName();
+        String patientId = casePojo.getPatientInfo().getPatientId();
+        PageBean<historyCaseListDto> pb = getHistoryCaseListByPage(patientId);
+        // 过滤当前病例ID
+        List<historyCaseListDto> filteredList = pb.getItems().stream()
+                .filter(dto -> !dto.getCaseId().equals(casePojo.getCaseId()))
+                .collect(Collectors.toList());
+
+        // 创建新的分页对象
+        PageBean<historyCaseListDto> filteredPb = new PageBean<>();
+        filteredPb.setTotal(pb.getTotal() - 1); // 总数减1
+        filteredPb.setItems(filteredList);
+
+        if (casePojo == null) {
+            throw new BusinessException(416,"病例不存在");
+        }
+        String jsonNodeStr = casePojo.getAiCaseInfo();
+        ObjectMapper objectMapper = new ObjectMapper();
+        JcaseDto jcaseDto = new JcaseDto();
+        List<Mark> marks = getMarksByCaseId(caseId);
+        // 将marks中的所有CaseEntity设置为null
+        for (Mark mark : marks) {
+            mark.setCaseEntity(null);
+        }
+        //往dto里面放数据
+        try {
+            JsonNode jsonNode = objectMapper.readTree(jsonNodeStr);
+            BeanUtils.copyProperties(casePojo,jcaseDto);
+            //放置json和历史病例、疾病名
+            jcaseDto.setDiseaseName(diseaseName);
+            jcaseDto.setAiCaseInfoJson(jsonNode);
+            jcaseDto.setHistoryCaseListDto(filteredPb);
+            jcaseDto.setDoctorDiags(normalDiagObjList);
+            jcaseDto.setMarks(marks);
+            // 现在你可以使用 jsonNode 对象进行后续操作
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new BusinessException(420,"json解析失败");
+        }
+        return jcaseDto;
     }
 
     private PageBean<CaseLibDto> convertToPageBean(Page<Case> casePage) {
@@ -293,18 +358,24 @@ public class CaseServiceImpl implements CaseService {
 
         return dto;
     }
-    public void addNormalDiag(String caseId, String doctorName, String suggestions) {
+    @Transactional
+    public void addNormalDiag(String caseId, String doctorName, String suggestions,List<Mark> marks) {
         // 1. 创建 NormalDiag 对象
         NormalDiag diag = new NormalDiag();
         diag.setDoctorName(doctorName);
         diag.setDocSuggestions(suggestions);  // 假设已正确映射医生建议字段
-
         // 2. 关联 Case（通过 caseId）
-
-        Case caseEntity = caseRepository.selectById(caseId).orElseThrow(() -> new RuntimeException("Case not found"));
+        Case caseEntity = caseRepository.selectById(caseId).orElseThrow(() -> new BusinessException(416,"病例不存在"));
         diag.setCaseEntity(caseEntity);
         caseRepository.setDiagStatusById(caseId);
-        // 3. 保存诊断信息
+        // 3.放置Mask标注
+        if(marks != null){
+            for (Mark mark : marks) {
+                mark.setCaseEntity(caseEntity);
+                markRepository.save(mark);
+            }
+        }
+        // 4. 保存该病例的诊断信息
         normalDiagRepository.save(diag);
     }
 }

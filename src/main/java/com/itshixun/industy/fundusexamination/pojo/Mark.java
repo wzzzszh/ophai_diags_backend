@@ -8,6 +8,7 @@ import org.hibernate.annotations.GenericGenerator;
 @Entity
 @Data
 public class Mark {
+    //主键
     @Id
     @GeneratedValue(
             generator = "tableNameGenerator"
@@ -17,16 +18,18 @@ public class Mark {
             strategy = "com.itshixun.industy.fundusexamination.Utils.IdGenetated.TableNameIdGenerator"
     )
     private String id;
-
+    //病例id,外键
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "case_id")
     private Case caseEntity;
-
+    //数据
     @Lob
     @Column(name = "data", columnDefinition = "TEXT")
     private String data;
-
+    //类型
     @Column(name = "image_type")
     private int imageType;
+
+
 
 }

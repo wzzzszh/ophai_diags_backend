@@ -1,9 +1,7 @@
 package com.itshixun.industy.fundusexamination.Service;
 
 import com.itshixun.industy.fundusexamination.pojo.*;
-import com.itshixun.industy.fundusexamination.pojo.dto.CaseDto;
-import com.itshixun.industy.fundusexamination.pojo.dto.CaseLibDto;
-import com.itshixun.industy.fundusexamination.pojo.dto.historyCaseListDto;
+import com.itshixun.industy.fundusexamination.pojo.dto.*;
 
 import java.util.List;
 
@@ -51,7 +49,7 @@ public interface CaseService {
 
     Case getCaseById(String caseId);
 
-    CaseDto updateNorDiag(CaseDto caseDto);
+    CaseUpdateDTO updateNorDiag(CaseUpdateDTO caseDto);
 
     PageBean<historyCaseListDto> getHistoryCaseListByPage(String patientId);
 
@@ -59,4 +57,5 @@ public interface CaseService {
 
     List<Mark> getMarksByCaseId(String caseId);
 
+    JcaseDto getRealCaseById(String caseId);
 }

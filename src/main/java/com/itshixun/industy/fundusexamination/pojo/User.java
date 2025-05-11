@@ -1,9 +1,6 @@
 package com.itshixun.industy.fundusexamination.pojo;
 
 
-
-
-import com.itshixun.industy.fundusexamination.pojo.Enum.UserPermissionEnum;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
@@ -83,7 +80,6 @@ public class User {
     @Temporal(TemporalType.TIMESTAMP)
     @UpdateTimestamp
     private Date updateDate;
-
     //用户权限
     @Column(name = "permission",columnDefinition = "int default 4")
     private int permission;
