@@ -158,6 +158,10 @@ public class CaseServiceImpl implements CaseService {
         caseRepository.updateById(caseId);
         //2.删除mask标注记录
         markRepository.deleteById(caseId);
+        //3.删除normalDiag记录
+        normalDiagRepository.deleteById(caseId);
+        //4.删除originImageData记录
+        oriRepository.deleteById(caseId);
 
     }
 
@@ -324,8 +328,6 @@ public class CaseServiceImpl implements CaseService {
             throw new RuntimeException("疾病名称转换失败", e);
         }
 
-
-        System.out.println(dto.toString());
         return dto;
     }
     private PageBean<historyCaseListDto> convertTohisPageBean(Page<Case> casePage) {
@@ -369,9 +371,15 @@ public class CaseServiceImpl implements CaseService {
     @Transactional
     public void addNormalDiag(String caseId, String doctorName, String suggestions,List<Mark> marks) {
         // 1. 创建 NormalDiag 对象
+
         NormalDiag diag = new NormalDiag();
-        diag.setDoctorName(doctorName);
-        diag.setDocSuggestions(suggestions);  // 假设已正确映射医生建议字段
+        if(doctorName != null){
+            diag.setDoctorName(doctorName);
+        }
+        if(suggestions != null){
+            diag.setDocSuggestions(suggestions);  // 假设已正确映射医生建议字段
+        }
+
         // 2. 关联 Case（通过 caseId）
         Case caseEntity = caseRepository.selectById(caseId).orElseThrow(() -> new BusinessException(416,"病例不存在"));
         diag.setCaseEntity(caseEntity);
@@ -384,7 +392,10 @@ public class CaseServiceImpl implements CaseService {
             }
         }
         // 4. 保存该病例的诊断信息
-        normalDiagRepository.save(diag);
+        if(diag != null){
+            normalDiagRepository.save(diag);
+        }
+
     }
 }
 

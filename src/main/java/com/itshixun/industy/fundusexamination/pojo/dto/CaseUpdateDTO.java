@@ -36,8 +36,6 @@ public class CaseUpdateDTO {
     //医生诊断
     private NormalDiagDto normalDiag;
 
-
-
     // 批注列表
     private List<Mark> marks;
 

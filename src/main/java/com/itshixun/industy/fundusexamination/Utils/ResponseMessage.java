@@ -7,7 +7,6 @@ public class ResponseMessage<T> {
     private Integer code;
     private String message;
     private T data;
-    private T data2;
     public ResponseMessage(Integer code,String message, T data) {
         this.code = code;
         this.message = message;

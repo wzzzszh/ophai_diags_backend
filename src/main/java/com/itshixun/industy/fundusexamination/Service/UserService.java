@@ -24,7 +24,7 @@ public interface UserService {
      * @param user
      * @return
      * */
-    User update(UserDto user);
+    User update(String userId,UserDto user);
 
     /**
      * 删除用户

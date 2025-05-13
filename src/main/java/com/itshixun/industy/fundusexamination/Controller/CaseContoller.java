@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+
 @RestController
 @RequestMapping("/api/case")
 public class CaseContoller {
@@ -60,7 +61,7 @@ public class CaseContoller {
      * @param caseDto 病例数据
      * @return
      */
-    @UserPermission(UserPermissionEnum.PATIENT)
+//    @UserPermission(UserPermissionEnum.PATIENT)
     @PostMapping
     public ResponseMessage<CaseDto> addCase(@Validated @RequestBody CaseDto caseDto) {
         Case CaseNew = caseService.add(caseDto);
@@ -108,7 +109,7 @@ public class CaseContoller {
      * @param caseId
      * @return
      */
-    @UserPermission({UserPermissionEnum.DOCTOR,UserPermissionEnum.PATIENT})
+    @UserPermission({UserPermissionEnum.DOCTOR})
     @GetMapping("/simple/{caseId}")
     public ResponseMessage<JcaseDto> getCaseById(@PathVariable String caseId) {
         JcaseDto jcaseDto = caseService.getRealCaseById(caseId);

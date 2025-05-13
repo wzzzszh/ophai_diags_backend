@@ -51,12 +51,10 @@ public interface CaseRepository extends JpaRepository<Case, String> {
      * @param caseId
      * @return
      */
-    // 修改前（缺少事务注解）
     // @Transactional
     @Transactional
     @Query("SELECT c FROM Case c WHERE c.caseId = :caseId AND c.isDeleted = 0")
     Optional<Case> selectById(@Param("caseId") String caseId);
-
 
 
     /**
@@ -64,9 +62,7 @@ public interface CaseRepository extends JpaRepository<Case, String> {
      * @param patientInfoPatientId
      * @return
      */
-//    @Query("SELECT c FROM Case c " +
-//            "WHERE (c.patientInfo.patientId = :patientInfoPatientId)"+
-//            "AND c.isDeleted = 0")
+
     @Query
             ("select c from Case c " +
                     "where c.patientInfo.patientId = :patientInfoPatientId " +
@@ -104,13 +100,25 @@ public interface CaseRepository extends JpaRepository<Case, String> {
     @Query(value = "SELECT DISTINCT c.`patient_info_patient_id` FROM cases c WHERE JSON_CONTAINS(c.disease_name, CONCAT('\"', :diseaseName, '\"'))",
             nativeQuery = true)
     List<String> findPatientIdsByDiseaseNameContaining(@Param("diseaseName") String diseaseName);
+    @Query("SELECT c FROM Case c " +
+            "WHERE (:diagStatus IS NULL OR c.diagStatus = :diagStatus) " +
+            "AND (:diseaseNameJson IS NULL OR c.diseaseNameJson = :diseaseNameJson) " +
+            "AND (:gender IS NULL OR c.patientInfo.gender = :gender) " +
+            "AND (:startAge IS NULL OR c.patientInfo.age >= :startAge) " +
+            "AND (:endAge IS NULL OR c.patientInfo.age <= :endAge) " +
+            "AND (:startDate IS NULL OR c.createDate >= :startDate) " +
+            "AND (:endDate IS NULL OR c.createDate <= :endDate) " +
+            "AND c.isDeleted = 0 " +
+            "ORDER BY c.createDate DESC")
+    Page<Case> selectImageByPage(
+            Integer diagStatus, String diseaseNameJson,
+            Integer gender,
+            Integer startAge, Integer endAge,
+            LocalDateTime startDate, LocalDateTime endDate,
+            Pageable pageable);
 
 
-//    @Query(value = "SELECT DISTINCT c.`patient_info_patient_id` FROM cases c WHERE JSON_CONTAINS(c.disease_name, :diseaseName)",
-//            nativeQuery = true)
-//    List<Long> findPatientIdsByDiseaseNameContaining(@Param("diseaseName") String diseaseName);
-    // 修改前错误的方法签名
-// int countByAgeGroup(List<Long> patientIds, int startAge, int endAge);
+
 
 
 }

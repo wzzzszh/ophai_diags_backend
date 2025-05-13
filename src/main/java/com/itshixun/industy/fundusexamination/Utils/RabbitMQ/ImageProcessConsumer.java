@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 
+import java.util.logging.Logger;
+
 @Service
 @RabbitListener(queues = RabbitMQConfig.IMAGE_PROCESS_QUEUE)
 public class ImageProcessConsumer {
@@ -23,6 +25,8 @@ public class ImageProcessConsumer {
     private PreImageService preImageService;
     @Autowired
     private CaseService caseService;
+    // 手动创建 Logger 实例
+    private static final Logger logger = Logger.getLogger(ImageProcessConsumer.class.getName());
     @RabbitHandler
     public void process(@Payload ImageProcessMessage message) {
         try {
@@ -47,14 +51,14 @@ public class ImageProcessConsumer {
             BeanUtils.copyProperties(managedCase, caseDto);
             caseDto.setDiagStatus(1);
             caseService.update(caseDto);
+            logger.info("病例ID为" +message.getCaseId()+ "的病例AI诊断成功");
 
         } catch (Exception e) {
             // 增强错误处理
-            System.err.println("消息处理失败: " + e.getMessage());
+            logger.severe("消息处理失败: " + e.getMessage());
             // 记录完整错误日志
             e.printStackTrace();
-            // 添加重试逻辑或死信队列处理
-
+            // TODO:添加重试逻辑或死信队列处理
         }
     }
 }

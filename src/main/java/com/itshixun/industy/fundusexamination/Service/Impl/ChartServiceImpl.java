@@ -1,5 +1,6 @@
 package com.itshixun.industy.fundusexamination.Service.Impl;
 
+import com.itshixun.industy.fundusexamination.Interface.AddCache;
 import com.itshixun.industy.fundusexamination.Service.chartService;
 import com.itshixun.industy.fundusexamination.pojo.dto.DailyCountDTO;
 import com.itshixun.industy.fundusexamination.pojo.dto.chartDto;
@@ -13,7 +14,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class ChartServiceImpl implements chartService {
@@ -21,6 +25,7 @@ public class ChartServiceImpl implements chartService {
     private PatientInfoRepository patientInfoRepository;
     @Autowired
     private CaseRepository caseRepository;
+    @AddCache(prefix = "chart",expire = 60*10)
     @Override
     public chartDto selectAll() {
 
@@ -34,7 +39,6 @@ public class ChartServiceImpl implements chartService {
                 .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
                 .atStartOfDay();
         List<DailyCountDTO> rawData = getWeeklyPatients(weekStart);
-//        System.out.println(rawData.toString());
         chartDto.setWeekPatientData(rawData);
         // 3.待诊断
         // 今日统计
@@ -58,11 +62,6 @@ public class ChartServiceImpl implements chartService {
         chartDto.setOAgeData((LinkedHashMap<String, Integer>) OAgeData);
 
 
-
-
-
-//        Map<String, Integer> DageData = getAgeDistributionByDisease("神经病");
-//        chartDto.setDAgeData((LinkedHashMap<String, Integer>) DageData);
         //6.性别分布
         Map<String, Integer> DGenderData = getGenderDistributionByDisease("糖尿病");
         Map<String, Integer> CGenderData = getGenderDistributionByDisease("白内障");
@@ -78,7 +77,7 @@ public class ChartServiceImpl implements chartService {
         chartDto.setMGenderData((LinkedHashMap<String, Integer>) MGenderData);
         chartDto.setOGenderData((LinkedHashMap<String, Integer>) OGenderData);
         chartDto.setAGenderData((LinkedHashMap<String, Integer>) AGenderData);
-//        genderData.put("男", patientInfoRepository.countByGender(1));
+
 
         return chartDto;
     }

@@ -1,8 +1,6 @@
 package com.itshixun.industy.fundusexamination.pojo.Config;
 
-import com.itshixun.industy.fundusexamination.Utils.AliOssUtil;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
@@ -38,8 +36,8 @@ public class AliOssConfig {
         this.secretAccessKey = secretAccessKey;
     }
 
-    @Bean
-    public AliOssUtil aliOssUtil() {
-        return new AliOssUtil(this.endpoint, this.accessKeyId, this.secretAccessKey);
-    }
+//    @Bean
+//    public AliOssUtil aliOssUtil() {
+//        return new AliOssUtil();
+//    }
 }

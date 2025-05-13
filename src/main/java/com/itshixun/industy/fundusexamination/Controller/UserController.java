@@ -81,6 +81,7 @@ UserController {
         System.out.println("登陆出现未知错误");
         return ResponseMessage.allError(412,"密码不正确");
     }
+
     //查询
     @GetMapping("/sellect/{userId}")
     public ResponseMessage<User> getUser(@PathVariable String userId) {
@@ -91,7 +92,8 @@ UserController {
     //修改
     @PutMapping
     public ResponseMessage<User> updateUser(@Validated @RequestBody UserDto user) {
-        User userNew = userService.update(user);
+
+        User userNew = userService.update(user.getUserId(),user);
         return ResponseMessage.success(userNew);
     }
 

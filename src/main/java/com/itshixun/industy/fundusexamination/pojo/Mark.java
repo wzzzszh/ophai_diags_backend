@@ -27,6 +27,7 @@ public class Mark {
     @Column(name = "data", columnDefinition = "TEXT")
     private String data;
     //类型
+    //原图12，视盘34，血管56，热力图7-16
     @Column(name = "image_type")
     private int imageType;
 

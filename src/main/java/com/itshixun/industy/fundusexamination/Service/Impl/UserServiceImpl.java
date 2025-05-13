@@ -2,6 +2,8 @@ package com.itshixun.industy.fundusexamination.Service.Impl;
 
 
 import cn.hutool.core.bean.BeanUtil;
+import com.itshixun.industy.fundusexamination.Interface.AddCache;
+import com.itshixun.industy.fundusexamination.Interface.DelCache;
 import com.itshixun.industy.fundusexamination.Service.UserService;
 import com.itshixun.industy.fundusexamination.Utils.Md5Util;
 import com.itshixun.industy.fundusexamination.Utils.ThreadLocalUtil;
@@ -73,23 +75,23 @@ public class UserServiceImpl implements UserService {
         }
         return saveUser;
     }
-
+    @AddCache(prefix = "user")
     @Override
     public User getUser(String userId) {
         return userRepository.findById(userId).orElseThrow(() -> {
             throw new IllegalStateException("用户不存在");
         });
     }
-
+    @DelCache(prefix = "user")
     @Override
-    public User update(UserDto user) {
+    public User update(String userId,UserDto user) {
 
         User userPojo = new User();
         BeanUtils.copyProperties(user, userPojo);
         return userRepository.save(userPojo);
 
     }
-
+    @DelCache(prefix = "user")
     @Override
     public void delete(String userId) {
         userRepository.deleteById(userId);
@@ -159,7 +161,7 @@ public class UserServiceImpl implements UserService {
         return convertToPageBean(nonAdminUsers);
 
     }
-
+    @DelCache(prefix = "user")
     @Override
     public UserListDTO updatePermission(String userId, Integer permission) {
         if(UserPermissionEnum.ADMIN.getCode() == permission){

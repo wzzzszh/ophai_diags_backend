@@ -1,19 +1,34 @@
 package com.itshixun.industy.fundusexamination.Service.Impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.itshixun.industy.fundusexamination.Service.CaseService;
 import com.itshixun.industy.fundusexamination.Service.PreImageService;
 import com.itshixun.industy.fundusexamination.Utils.AliOssUtil;
-import com.itshixun.industy.fundusexamination.Utils.ResponseMessage;
+import com.itshixun.industy.fundusexamination.Utils.RabbitMQ.ImageProcessMessage;
+import com.itshixun.industy.fundusexamination.Utils.RabbitMQ.RabbitMQConfig;
+import com.itshixun.industy.fundusexamination.Utils.ThreadLocalUtil;
 import com.itshixun.industy.fundusexamination.exception.BusinessException;
 import com.itshixun.industy.fundusexamination.pojo.Case;
+import com.itshixun.industy.fundusexamination.pojo.OriginImageData;
+import com.itshixun.industy.fundusexamination.pojo.PageBean;
 import com.itshixun.industy.fundusexamination.pojo.PatientInfo;
 import com.itshixun.industy.fundusexamination.pojo.dto.CaseDto;
-import com.itshixun.industy.fundusexamination.pojo.httpEnity.DrugRecommendation;
+import com.itshixun.industy.fundusexamination.pojo.dto.ImageDTO;
 import com.itshixun.industy.fundusexamination.pojo.httpEnity.ResponseData;
 import com.itshixun.industy.fundusexamination.repository.CaseRepository;
 import com.itshixun.industy.fundusexamination.repository.PatientInfoRepository;
 import com.itshixun.industy.fundusexamination.repository.PreImageRepository;
+import jakarta.servlet.ServletOutputStream;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
+import org.springframework.amqp.AmqpException;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -22,11 +37,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
+@Slf4j
 @Service
 public class PreImageServiceImpl implements PreImageService {
     @Autowired
@@ -35,6 +56,15 @@ public class PreImageServiceImpl implements PreImageService {
     private PatientInfoRepository patientInfoRepository;
     @Autowired
     private RestTemplate restTemplate;
+    @Autowired
+    private CaseService caseService;
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+    @Autowired
+    private AliOssUtil aliOssUtil;
+    @Autowired
+    private CaseRepository caseRepository;
+
     @Override
     public Case saveAndDiag(CaseDto caseDto) {
         return null;
@@ -76,35 +106,12 @@ public class PreImageServiceImpl implements PreImageService {
         }
     }
 
-    /**已经弃用
-     * @status 弃用
-     * @param originalFileName1
-     * @param originalFileName2
-     * @param fileLeft
-     * @param fileRight
-     * @return
-     */
     @Override
-    public Map<String, String> saveOSS(String originalFileName1, String originalFileName2,InputStream fileLeft,
-                                       InputStream fileRight) {
-        if (originalFileName1 == null ||
-                originalFileName1.isEmpty()||
-                originalFileName2 == null ||
-                originalFileName2.isEmpty()) {
-            throw new RuntimeException("文件名不能为空");
-        }
-        //保证文件名唯一
-        String filename1 = UUID.randomUUID().toString() + originalFileName1.substring(originalFileName1.lastIndexOf("."));
-        String filename2 = UUID.randomUUID().toString() + originalFileName2.substring(originalFileName2.lastIndexOf("."));
-        //保存图片信息到OSS
-        String urlLeft = AliOssUtil.uploadFile(filename1, fileLeft);
-        String urlRight = AliOssUtil.uploadFile(filename2, fileRight);
-        //保存图片信息到url
-        Map<String, String> url = new HashMap<>();
-        url.put("urlLeft",urlLeft);
-        url.put("urlRight",urlRight);
-        return url;
+    public Map<String, String> saveOSS(String originalFileName1, String originalFileName2, InputStream inputStream1, InputStream inputStream2) {
+        return Map.of();
     }
+
+
     @Override
     public Map<String, List<MultipartFile>> pattern(MultipartFile[] files) {
         // 创建存储分组文件的Map，键是患者ID，值是该患者的文件列表
@@ -141,7 +148,300 @@ public class PreImageServiceImpl implements PreImageService {
     @Override
     public PatientInfo selectPatientInfo(String patientId) {
         return patientInfoRepository.findById(patientId)
-                .orElseThrow(() -> new RuntimeException("患者信息不存在 ID：" + patientId));
+                .orElseThrow(() -> new BusinessException(422,"上传图像中有患者信息不存在ID为：" + patientId));
+    }
+
+    @Override
+    public void saveAndProcess(MultipartFile[] files) throws IOException {
+        //1.参数验证，并且用map来接收所有的文件
+        // 1.1添加空文件数组检查
+        if (files == null || files.length == 0) {
+            throw new BusinessException(452,"上传文件列表不能为空");
+        }
+        Map<String, List<MultipartFile>> mapFiles;
+        // 1.2 添加文件格式检查
+        try {
+            mapFiles = pattern(files);
+        } catch (Exception e) {
+            throw new BusinessException(453,"文件格式出现问题");
+        }
+        //2. 循环存储文件到病例
+        for (Map.Entry<String, List<MultipartFile>> entry : mapFiles.entrySet()) {
+            //2.1 获取键值对，并且循环接收pictures
+            String patientId = entry.getKey();
+            List<MultipartFile> pictures = entry.getValue();
+            //2.2 判断patientId是否存在patient
+            if(!caseService.isPatientExist(patientId)){
+//                return ResponseMessage.allError(415,patientId + "病人不存在，请先添加病人信息" );
+                throw new BusinessException(415,patientId + "病人不存在，请先添加病人信息" );
+            }
+            //2.3 新建case，保存该patientId到该病例的基本信息里面，初始化OriginImage，得到返回的caseId
+            CaseDto caseDto = new CaseDto();
+            //2.3.1 设置责任医生的姓名
+            Map<String,Object> map = ThreadLocalUtil.get();
+            String responsibleDoctor = (String) map.get("userName");
+            PatientInfo patientInfo;
+            //2.3.2获取患者信息注入病例
+            patientInfo = selectPatientInfo(patientId);
+            //2.3.2.1为dto注入patientInfo，originImageData，diagStatus，responsibleDoctor
+            caseDto.setPatientInfo(patientInfo);
+            caseDto.setOriginImageData(new OriginImageData());
+            caseDto.setDiagStatus(0);
+            caseDto.setResponsibleDoctor(responsibleDoctor);
+            //2.3.2.2 获取保存后的实体
+            Case caseNew = caseService.add(caseDto);
+            //2.3.3 把caseId赋值到dto
+            BeanUtils.copyProperties(caseNew, caseDto);
+            String caseId = caseNew.getCaseId();
+            //2.3.4 初始化图片URL
+            String urlLeft = null;
+            String urlRight = null;
+            //2.3.5 准备患者信息
+            String patientName = patientInfo.getName();
+            int patientAge = patientInfo.getAge();
+            int patientGender = patientInfo.getGender();
+            //2.3.6据caseId重命名图片文件
+            // 2.3.6.1循环处理图片文件
+            for (MultipartFile file : pictures) {
+                String originalName = file.getOriginalFilename();
+                //2.3.6.2获取后缀
+                String fileExtension = originalName.substring(originalName.lastIndexOf("."));
+
+                // 2.3.6.3根据左右眼构建新的文件名
+                String newFilename;
+                if (originalName.contains("left")) {
+                    newFilename = caseId + "_left" + fileExtension;
+                } else if (originalName.contains("right")) {
+                    newFilename = caseId + "_right" + fileExtension;
+                } else {
+                    continue; // 跳过不符合命名规则的文件
+                }
+
+                // 2.3.6.4上传到OSS
+                String url = aliOssUtil.uploadFile(newFilename, file.getInputStream());
+                System.out.println("oss存储的url"+url);
+                // 2.3.6.5保存URL到对应变量
+                if (originalName.contains("left")) {
+                    urlLeft = url;
+                } else {
+                    urlRight = url;
+                }
+            }
+
+            // 2.4.保存图片URL到病例
+            caseDto.getOriginImageData().setLeftImage(urlLeft);
+            caseDto.getOriginImageData().setRightImage(urlRight);
+            caseService.update(caseDto);
+            log.info("图片url保存成功,下面是消息队列！");
+            // 2.5.发送消息到队列
+
+            try {
+                rabbitTemplate.convertAndSend(
+                        RabbitMQConfig.IMAGE_PROCESS_EXCHANGE,  // 使用交换机名称
+                        RabbitMQConfig.ROUTING_KEY,             // 使用路由键
+                        new ImageProcessMessage(
+                                // 使用 MessageBuilder 构建消息
+                                caseId,
+                                urlLeft,
+                                urlRight,
+                                patientName,
+                                patientAge,
+                                patientGender
+                        ),
+                        message -> {
+                            message.getMessageProperties().setContentType("application/json");
+                            return message;
+                        }
+                );
+            } catch (AmqpException e) {
+                log.error("消息发送失败: {}", e.getMessage());
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    @Override
+    public PageBean<ImageDTO> SelectImageByPage(
+            Integer pageNum, Integer pageSize,
+            Integer diagStatus, String[] diseaseName,
+            Integer gender,
+            Integer startAge, Integer endAge,
+            LocalDateTime startDate, LocalDateTime endDate) {
+        //1.分页的默认值的设置
+        if (diagStatus != null && diagStatus == -1) {
+            diagStatus = null;
+        }
+
+        if ("全部".equals(diseaseName[0])) {
+            diseaseName = null;
+        }
+        if (gender != null && gender == -1) {
+            gender = null;
+        }
+        if (startAge != null && startAge == -1) {
+            startAge = null;
+        }
+        if (endAge != null && endAge == -1) {
+            endAge = null;
+        }
+        //2.分页参数的设置
+        if (pageNum == null || pageSize == null) {
+            throw new IllegalArgumentException("页码和每页数量不能为空");
+        }
+        Pageable pageable = PageRequest.of(pageNum - 1, pageSize);
+        //3.将diseaseName转换成Json字符串
+        String diseaseNameJson = null;
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            // 移除元素中的双引号（如果前端已经携带）
+            if (diseaseName != null) {
+                diseaseName = Arrays.stream(diseaseName)
+                        .map(s -> s.replace("\"", "")) // 新增：去除每个疾病名称的双引号
+                        .toArray(String[]::new);
+            }
+            diseaseNameJson = diseaseName != null ?
+                    objectMapper.writeValueAsString(diseaseName) : null;
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException("疾病名称数组转换失败", e);
+        }
+        //4.调用repository的方法
+        Page<Case> p = caseRepository.selectImageByPage(
+                diagStatus, diseaseNameJson,
+                gender, startAge, endAge,
+                startDate, endDate, pageable);
+        log.info("查询到的p"+p);
+        //5.将Page<Case>转换成PageBean<ImageDTO>
+        PageBean<ImageDTO> p2 = convertToPageBean(p);
+        log.info("查询到的p2"+p2);
+        return p2;
+    }
+
+    @Override
+    public void batchExportImage(Integer pageNum, Integer pageSize,
+                                 Integer diagStatus, String[] diseaseName,
+                                 Integer gender,
+                                 Integer startAge, Integer endAge,
+                                 LocalDateTime startDate, LocalDateTime endDate,
+                                 ZipOutputStream zipOut) {
+        //1.分页的默认值的设置
+        if (diagStatus != null && diagStatus == -1) {
+            diagStatus = null;
+        }
+        if ("全部".equals(diseaseName[0])) {
+            diseaseName = null;
+        }
+        if (gender != null && gender == -1) {
+            gender = null;
+        }
+        if (startAge != null && startAge == -1) {
+            startAge = null;
+        }
+        if (endAge != null && endAge == -1) {
+            endAge = null;
+        }
+        //2.分页参数的设置
+        if (pageNum == null || pageSize == null) {
+            throw new IllegalArgumentException("页码和每页数量不能为空");
+        }
+        Pageable pageable = PageRequest.of(pageNum - 1, pageSize);
+        //3.将diseaseName转换成Json字符串
+        String diseaseNameJson = null;
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            // 移除元素中的双引号（如果前端已经携带）
+            if (diseaseName != null) {
+                diseaseName = Arrays.stream(diseaseName)
+                        .map(s -> s.replace("\"", "")) // 新增：去除每个疾病名称的双引号
+                        .toArray(String[]::new);
+            }
+            diseaseNameJson = diseaseName != null ?
+                    objectMapper.writeValueAsString(diseaseName) : null;
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException("疾病名称数组转换失败", e);
+        }
+        //4.调用repository的方法
+        Page<Case> p = caseRepository.selectImageByPage(
+                diagStatus, diseaseNameJson,
+                gender, startAge, endAge,
+                startDate, endDate, pageable);
+        //5.将Page<Case>转换成PageBean<ImageDTO>
+        PageBean<ImageDTO> p2 = convertToPageBean(p);
+        //6.获取PageBean<ImageDTO>中的items
+        List<ImageDTO> items = p2.getItems();
+        //7.循环遍历items，获取每个ImageDTO中的leftImage和rightImage
+        for (ImageDTO imageDTO : items) {
+            String caseId = imageDTO.getCaseId();
+            String leftImage = imageDTO.getOriginImageData().getLeftImage();
+            String rightImage = imageDTO.getOriginImageData().getRightImage();
+            //8.调用AliOssUtil的方法，将leftImage和rightImage下载到本地
+            // 写入左眼图片
+            writeImageToZip(zipOut, caseId, leftImage, "left.jpg");
+
+            // 写入右眼图片
+            writeImageToZip(zipOut, caseId, rightImage, "right.jpg");
+
+        }
+
+
+    }
+
+    @Override
+    public void exportData(Integer pageNum, Integer pageSize, Integer diagStatus, String[] diseaseNameArray, Integer gender, Integer startAge, Integer endAge, LocalDateTime startDate, LocalDateTime endDate, ServletOutputStream out) {
+
+    }
+
+    /**
+     * 将单个图片流写入 ZIP 的指定文件夹
+     */
+    private void writeImageToZip(
+            ZipOutputStream zipOut,
+            String caseId,
+            String imageOssPath,  // OSS 文件路径（如 "folder/image.jpg"）
+            String fileName      // 写入 ZIP 后的文件名（如 "left.jpg"）
+    ) {
+        if (imageOssPath == null || imageOssPath.isEmpty()) {
+            return; // 跳过空路径
+        }
+
+        try {
+            // 1. 创建 ZIP 条目路径（格式：caseId/fileName）
+            String entryPath = caseId + "/" + fileName;
+            ZipEntry zipEntry = new ZipEntry(entryPath);
+            zipOut.putNextEntry(zipEntry);
+
+            // 2. 从 OSS 下载图片字节流
+            try (InputStream imageStream = aliOssUtil.downloadFile(imageOssPath)) {
+                // 3. 将字节流写入 ZIP（使用 Apache Commons IO 工具类）
+                IOUtils.copy(imageStream, zipOut);
+            } catch (Exception e) {
+                log.error("OSS 文件下载失败: {}", imageOssPath, e);
+            }
+
+            // 4. 关闭当前条目
+            zipOut.closeEntry();
+        } catch (IOException e) {
+            log.error("ZIP 写入失败: caseId={}, fileName={}", caseId, fileName, e);
+        }
+    }
+
+
+    private PageBean<ImageDTO> convertToPageBean(Page<Case> casePage) {
+        PageBean<ImageDTO> pb = new PageBean<>();
+        pb.setTotal(casePage.getTotalElements()); // 总记录数
+        pb.setItems(
+                casePage.getContent() // 当前页数据
+                        .stream()
+                        .map(this::convertToDto) // 转换为 DTO
+                        .collect(Collectors.toList())
+        );
+        return pb;
+    }
+    private ImageDTO convertToDto(Case caseEntity) {
+        ImageDTO imageDTO = new ImageDTO();
+        BeanUtils.copyProperties(caseEntity, imageDTO);
+        OriginImageData originImageData = caseEntity.getOriginImageData();
+        imageDTO.setOriginImageData(originImageData);
+        return imageDTO;
     }
 }
 
