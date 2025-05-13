@@ -1,6 +1,9 @@
 package com.itshixun.industy.fundusexamination.Service.Impl;
 
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.write.style.column.LongestMatchColumnWidthStyleStrategy;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itshixun.industy.fundusexamination.Service.CaseService;
 import com.itshixun.industy.fundusexamination.Service.PreImageService;
@@ -14,12 +17,12 @@ import com.itshixun.industy.fundusexamination.pojo.OriginImageData;
 import com.itshixun.industy.fundusexamination.pojo.PageBean;
 import com.itshixun.industy.fundusexamination.pojo.PatientInfo;
 import com.itshixun.industy.fundusexamination.pojo.dto.CaseDto;
+import com.itshixun.industy.fundusexamination.pojo.dto.ExcelData;
 import com.itshixun.industy.fundusexamination.pojo.dto.ImageDTO;
 import com.itshixun.industy.fundusexamination.pojo.httpEnity.ResponseData;
 import com.itshixun.industy.fundusexamination.repository.CaseRepository;
 import com.itshixun.industy.fundusexamination.repository.PatientInfoRepository;
 import com.itshixun.industy.fundusexamination.repository.PreImageRepository;
-import jakarta.servlet.ServletOutputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.amqp.AmqpException;
@@ -385,9 +388,153 @@ public class PreImageServiceImpl implements PreImageService {
 
     }
 
-    @Override
-    public void exportData(Integer pageNum, Integer pageSize, Integer diagStatus, String[] diseaseNameArray, Integer gender, Integer startAge, Integer endAge, LocalDateTime startDate, LocalDateTime endDate, ServletOutputStream out) {
+//    @Override
+//    public void exportData(Integer pageNum, Integer pageSize, Integer diagStatus, String[] diseaseName, Integer gender, Integer startAge, Integer endAge, LocalDateTime startDate, LocalDateTime endDate, ServletOutputStream out) {
+//        //1.分页的默认值的设置
+//        if (diagStatus != null && diagStatus == -1) {
+//            diagStatus = null;
+//        }
+//        if ("全部".equals(diseaseName[0])) {
+//            diseaseName = null;
+//        }
+//        if (gender != null && gender == -1) {
+//            gender = null;
+//        }
+//        if (startAge != null && startAge == -1) {
+//            startAge = null;
+//        }
+//        if (endAge != null && endAge == -1) {
+//            endAge = null;
+//        }
+//        //2.分页参数的设置
+//        if (pageNum == null || pageSize == null) {
+//            throw new IllegalArgumentException("页码和每页数量不能为空");
+//        }
+//        Pageable pageable = PageRequest.of(pageNum - 1, pageSize);
+//        //3.将diseaseName转换成Json字符串
+//        String diseaseNameJson = null;
+//        try {
+//            ObjectMapper objectMapper = new ObjectMapper();
+//            // 移除元素中的双引号（如果前端已经携带）
+//            if (diseaseName != null) {
+//                diseaseName = Arrays.stream(diseaseName)
+//                        .map(s -> s.replace("\"", "")) // 新增：去除每个疾病名称的双引号
+//                        .toArray(String[]::new);
+//            }
+//            diseaseNameJson = diseaseName != null ?
+//                    objectMapper.writeValueAsString(diseaseName) : null;
+//        } catch (JsonProcessingException e) {
+//            throw new IllegalArgumentException("疾病名称数组转换失败", e);
+//        }
+//        //4.调用repository的方法
+//        Page<Case> p = caseRepository.selectImageByPage(
+//                diagStatus, diseaseNameJson,
+//                gender, startAge, endAge,
+//                startDate, endDate, pageable);
+//        //5.将Page<Case>转换成PageBean<ImageDTO>
+//        PageBean<ImageDTO> p2 = convertToPageBean(p);
+//        //6.获取PageBean<ImageDTO>中的items
+//        List<ImageDTO> items = p2.getItems();
+//        //7.循环遍历items，获取每个ImageDTO中的leftImage和rightImage
+//        List<ExcelData> excelDataList = new ArrayList<>();
+//
+//        for (ImageDTO imageDTO : items) {
+//            String caseId = imageDTO.getCaseId();
+//            ExcelData excelData = parseAiInfo(imageDTO);
+//            excelData.setCaseId(caseId);
+//            excelDataList.add(excelData);
+//        }
+//        System.out.println("excelDataList在这里"+excelDataList);
+//        try {
+//            EasyExcel.write(out, ExcelData.class)
+//                    .registerWriteHandler(new LongestMatchColumnWidthStyleStrategy()) // 自动列宽
+//                    .sheet("病例数据")
+//                    .doWrite(excelDataList);
+//        } catch (Exception e) {
+//            throw new RuntimeException("导出Excel失败", e);
+//        }
+//    }
 
+    /**
+     * 导出excelZIP
+     * @param pageNum
+     * @param pageSize
+     * @param diagStatus
+     * @param diseaseName
+     * @param gender
+     * @param startAge
+     * @param endAge
+     * @param startDate
+     * @param endDate
+     * @param zipOut
+     */
+    @Override
+    public void exportDataToZip(Integer pageNum, Integer pageSize, Integer diagStatus, String[] diseaseName, Integer gender, Integer startAge, Integer endAge, LocalDateTime startDate, LocalDateTime endDate, ZipOutputStream zipOut) {
+        //1.分页的默认值的设置
+        if (diagStatus != null && diagStatus == -1) {
+            diagStatus = null;
+        }
+        if ("全部".equals(diseaseName[0])) {
+            diseaseName = null;
+        }
+        if (gender != null && gender == -1) {
+            gender = null;
+        }
+        if (startAge != null && startAge == -1) {
+            startAge = null;
+        }
+        if (endAge != null && endAge == -1) {
+            endAge = null;
+        }
+        //2.分页参数的设置
+        if (pageNum == null || pageSize == null) {
+            throw new IllegalArgumentException("页码和每页数量不能为空");
+        }
+        Pageable pageable = PageRequest.of(pageNum - 1, pageSize);
+        //3.将diseaseName转换成Json字符串
+        String diseaseNameJson = null;
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            // 移除元素中的双引号（如果前端已经携带）
+            if (diseaseName != null) {
+                diseaseName = Arrays.stream(diseaseName)
+                        .map(s -> s.replace("\"", "")) // 新增：去除每个疾病名称的双引号
+                        .toArray(String[]::new);
+            }
+            diseaseNameJson = diseaseName != null ?
+                    objectMapper.writeValueAsString(diseaseName) : null;
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException("疾病名称数组转换失败", e);
+        }
+        //4.调用repository的方法
+        Page<Case> p = caseRepository.selectImageByPage(
+                diagStatus, diseaseNameJson,
+                gender, startAge, endAge,
+                startDate, endDate, pageable);
+        //5.将Page<Case>转换成PageBean<ImageDTO>
+        PageBean<ImageDTO> p2 = convertToPageBean(p);
+        //6.获取PageBean<ImageDTO>中的items
+        List<ImageDTO> items = p2.getItems();
+        //7.循环遍历items，获取每个ImageDTO中的leftImage和rightImage
+        List<ExcelData> excelDataList = new ArrayList<>();
+
+        for (ImageDTO imageDTO : items) {
+            String caseId = imageDTO.getCaseId();
+            ExcelData excelData = parseAiInfo(imageDTO);
+            excelData.setCaseId(caseId);
+            excelDataList.add(excelData);
+        }
+        System.out.println("excelDataList在这里"+excelDataList);
+
+        // 2. 直接通过 EasyExcel 写入 ZIP 流
+        try {
+            EasyExcel.write(zipOut, ExcelData.class)
+                    .registerWriteHandler(new LongestMatchColumnWidthStyleStrategy())
+                    .sheet("病例数据")
+                    .doWrite(excelDataList);
+        } catch (Exception e) {
+            throw new RuntimeException("Excel生成失败", e);
+        }
     }
 
     /**
@@ -442,6 +589,36 @@ public class PreImageServiceImpl implements PreImageService {
         OriginImageData originImageData = caseEntity.getOriginImageData();
         imageDTO.setOriginImageData(originImageData);
         return imageDTO;
+    }
+
+    private ExcelData parseAiInfo(ImageDTO imageDTO) {
+        ExcelData data = new ExcelData();
+        data.setCaseId(imageDTO.getCaseId()); // 保持caseId直接赋值
+
+        try {
+            // 直接获取整个AI信息的原始JSON字符串
+            String rawJson = imageDTO.getAiCaseInfo();
+            data.setPredictions(extractJsonField(rawJson, "message.predictions"));
+            data.setSuggestions(extractJsonField(rawJson, "message.suggestions"));
+            data.setDrugs(extractJsonField(rawJson, "message.drugs"));
+            data.setRevisitTime(extractJsonField(rawJson, "message.revisit_time"));
+            data.setReportHtml(extractJsonField(rawJson, "message.report_html"));
+            data.setQrCode(extractJsonField(rawJson, "message.qr_code"));
+        } catch (Exception e) {
+            log.error("解析AI信息失败 caseId: {}", imageDTO.getCaseId(), e);
+            data.setPredictions("[解析错误] " + e.getMessage());
+        }
+        return data;
+    }
+    // 通用JSON字段提取方法
+    private String extractJsonField(String jsonStr, String jsonPath) {
+        try {
+            JsonNode root = new ObjectMapper().readTree(jsonStr);
+            JsonNode node = root.at("/" + jsonPath.replace(".", "/"));
+            return node.isMissingNode() ? "" : node.toString();
+        } catch (JsonProcessingException e) {
+            return "[字段提取错误]";
+        }
     }
 }
 

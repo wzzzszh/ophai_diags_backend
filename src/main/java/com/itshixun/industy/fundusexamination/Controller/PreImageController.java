@@ -7,9 +7,7 @@ import com.itshixun.industy.fundusexamination.exception.BusinessException;
 import com.itshixun.industy.fundusexamination.pojo.PageBean;
 import com.itshixun.industy.fundusexamination.pojo.dto.ImageDTO;
 import com.itshixun.industy.fundusexamination.pojo.httpEnity.ResponseData;
-import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.constraints.Min;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,6 +18,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 /**
@@ -273,41 +272,41 @@ public class PreImageController {
             @RequestParam(required = false) Integer diagStatus,
             @RequestParam(required = false) String diseaseName,
             @RequestParam(required = false) Integer gender,
-            @RequestParam(required = false) @Min(0) Integer StartAge, // 推荐小驼峰命名 StartAge -> startAge
+            @RequestParam(required = false) Integer StartAge, // 推荐小驼峰命名 StartAge -> startAge
             @RequestParam(required = false) Integer EndAge,
             @RequestParam(required = false) LocalDateTime startDate,
             @RequestParam(required = false) LocalDateTime endDate,
             HttpServletResponse response) throws IOException {
         // 0. 处理 diseaseName 为数组
         String[] diseaseNameArray = diseaseName.split(",");
-        // 1. 设置响应头
-        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        String fileName = URLEncoder.encode("数据导出_" + LocalDate.now(), "UTF-8") + ".xlsx";
-        response.setHeader("Content-Disposition", "attachment; filename=" + fileName);
-
+        // 1. 设置响应头（强制 ZIP 格式）
+        String zipName = "数据导出_" + LocalDate.now() + ".zip";
+        String encodedZipName = URLEncoder.encode(zipName, "UTF-8").replaceAll("\\+", "%20");
+        response.reset();
+        response.setContentType("application/zip");
+        response.setCharacterEncoding("UTF-8");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + encodedZipName + "\"");
         // 2. 获取输出流
-        try (ServletOutputStream out = response.getOutputStream()) {
-            // 3. 调用 Service 层生成 Excel
-            preImageService.exportData(
-                    pageNum,
-                    pageSize,
-                    diagStatus,
-                    diseaseNameArray,
-                    gender,
-                    StartAge,
-                    EndAge,
-                    startDate,
-                    endDate,
-                    out
+        try (ZipOutputStream zipOut = new ZipOutputStream(response.getOutputStream())) {
+            // 2. 生成 Excel 并写入 ZIP
+            String excelName = "病例数据_" + LocalDate.now() + ".xlsx";
+            ZipEntry zipEntry = new ZipEntry(excelName);
+            zipOut.putNextEntry(zipEntry);
+
+            // 3. 调用 Service 层生成 Excel 到 ZIP 流
+            preImageService.exportDataToZip(
+                    pageNum, pageSize, diagStatus, diseaseNameArray,
+                    gender, StartAge, EndAge, startDate, endDate, zipOut
             );
+
+            zipOut.closeEntry();
         } catch (Exception e) {
             if (!response.isCommitted()) {
                 response.reset();
                 response.setContentType("application/json");
                 response.getWriter().write("{\"code\":500, \"msg\":\"导出失败: " + e.getMessage() + "\"}");
             } else {
-                log.error("Excel导出异常（响应已提交）", e);
+                log.error("ZIP导出异常（响应已提交）", e);
             }
         }
-    }
-}
+}}

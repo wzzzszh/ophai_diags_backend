@@ -6,8 +6,6 @@ import com.itshixun.industy.fundusexamination.pojo.PatientInfo;
 import com.itshixun.industy.fundusexamination.pojo.dto.CaseDto;
 import com.itshixun.industy.fundusexamination.pojo.dto.ImageDTO;
 import com.itshixun.industy.fundusexamination.pojo.httpEnity.ResponseData;
-import jakarta.servlet.ServletOutputStream;
-import jakarta.validation.constraints.Min;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -56,6 +54,22 @@ public interface PreImageService {
                           LocalDateTime startDate, LocalDateTime endDate,
                           ZipOutputStream zipOut);
 
+//
+//    void exportData(Integer pageNum, Integer pageSize, Integer diagStatus, String[] diseaseNameArray, Integer gender, Integer startAge, Integer endAge, LocalDateTime startDate, LocalDateTime endDate, ServletOutputStream out);
 
-    void exportData(Integer pageNum, Integer pageSize, Integer diagStatus, String[] diseaseNameArray, Integer gender, @Min(0) Integer startAge, Integer endAge, LocalDateTime startDate, LocalDateTime endDate, ServletOutputStream out);
+    void exportDataToZip(Integer pageNum, Integer pageSize, Integer diagStatus, String[] diseaseNameArray, Integer gender, Integer startAge, Integer endAge, LocalDateTime startDate, LocalDateTime endDate, ZipOutputStream zipOut);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
