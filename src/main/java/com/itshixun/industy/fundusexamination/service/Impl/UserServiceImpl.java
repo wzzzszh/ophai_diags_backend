@@ -83,9 +83,7 @@ public class UserServiceImpl implements UserService {
     @AddCache(prefix = "user")
     @Override
     public User getUser(String userId) {
-        return userRepository.findById(userId).orElseThrow(() -> {
-            throw new IllegalStateException("用户不存在");
-        });
+        return userRepository.findById(userId).orElseThrow(() -> new RuntimeException("用户不存在"));
     }
     @DelCache(prefix = "user")
     @Override

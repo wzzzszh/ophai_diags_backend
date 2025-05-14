@@ -1,5 +1,6 @@
 package com.itshixun.industy.fundusexamination.domain.vo;
 
+import com.itshixun.industy.fundusexamination.domain.po.PatientInfo;
 import lombok.Data;
 
 /**
@@ -32,9 +33,11 @@ public class UserVO {
     private String position;
     //token
     private String token;
-    // 头像URL
-    private String avatarUrl;
 
     private String invitationCode;
+
+    private int permission;
+
+    private PatientInfo patientInfo;
 
 }

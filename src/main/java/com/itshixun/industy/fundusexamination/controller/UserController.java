@@ -48,7 +48,7 @@ UserController {
     }
     //登录
     @PostMapping("/login")
-    public ResponseMessage<LoginUserDTO> login(@Validated @RequestBody LoginDTO user) {
+    public ResponseMessage<UserVO> login(@Validated @RequestBody LoginDTO user) {
 //        User userNew = userService.findByUserName(user);
         User userNew = userService.findByIdCard(user);
 
@@ -72,11 +72,11 @@ UserController {
             } catch (Exception e) {
                 throw new BusinessException(461,"redis服务器出现问题");
             }
-            LoginUserDTO loginUserDto = new LoginUserDTO();
-            BeanUtils.copyProperties(userNew,loginUserDto);
-            loginUserDto.setToken(token);
+            UserVO userVO = new UserVO();
+            BeanUtils.copyProperties(userNew,userVO);
+            userVO.setToken(token);
 
-            return ResponseMessage.success(loginUserDto);
+            return ResponseMessage.success(userVO);
         }
         System.out.println("登陆出现未知错误");
         return ResponseMessage.allError(412,"密码不正确");
