@@ -1,6 +1,6 @@
 package com.itshixun.industy.fundusexamination.repository;
 
-import com.itshixun.industy.fundusexamination.pojo.Mark;
+import com.itshixun.industy.fundusexamination.domain.po.Mark;
 import org.springframework.data.repository.CrudRepository;
 
 import java.util.List;

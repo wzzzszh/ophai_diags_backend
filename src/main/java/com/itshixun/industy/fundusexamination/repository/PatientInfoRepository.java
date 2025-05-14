@@ -1,8 +1,6 @@
 package com.itshixun.industy.fundusexamination.repository;
 
-import com.itshixun.industy.fundusexamination.pojo.PatientInfo;
-import com.itshixun.industy.fundusexamination.pojo.dto.DailyCountDTO;
-import com.itshixun.industy.fundusexamination.pojo.dto.chartDto;
+import com.itshixun.industy.fundusexamination.domain.po.PatientInfo;
 import jakarta.transaction.Transactional;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.data.domain.Page;
@@ -90,4 +88,6 @@ public interface PatientInfoRepository extends CrudRepository<PatientInfo, Strin
     @Query("SELECT COUNT(p) FROM PatientInfo p WHERE p.patientId IN :patientIds AND p.gender = :genderCode")
     int countByGenderAndPatientIds(@Param("patientIds") List<String> patientIds,
                                    @Param("genderCode") int genderCode);
+
+    PatientInfo findByIdCard(String idCard);
 }

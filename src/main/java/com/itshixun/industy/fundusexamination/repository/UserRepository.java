@@ -1,6 +1,6 @@
 package com.itshixun.industy.fundusexamination.repository;
 
-import com.itshixun.industy.fundusexamination.pojo.User;
+import com.itshixun.industy.fundusexamination.domain.po.User;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -25,8 +25,14 @@ public interface UserRepository extends CrudRepository<User, String> {
 
     // 分页查询所有非管理员用户
     @Query("SELECT u FROM User u " +
-            "WHERE u.permission <> 4" +
-            "ORDER BY u.createDate DESC "
+            "WHERE u.permission <> 4 " +
+            "and u.permission <> 1 " +
+            "ORDER BY u.permission DESC "
     )
     Page<User> findNonAdminUsers(Pageable pageable);
+
+    @Query("SELECT u FROM User u " +
+            "WHERE u.idNumber = :idCard"
+    )
+    User findByIdCard(String idCard);
 }

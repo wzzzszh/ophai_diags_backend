@@ -1,6 +1,6 @@
 package com.itshixun.industy.fundusexamination.exception;
 
-import com.itshixun.industy.fundusexamination.Utils.ResponseMessage;
+import com.itshixun.industy.fundusexamination.utils.ResponseMessage;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
