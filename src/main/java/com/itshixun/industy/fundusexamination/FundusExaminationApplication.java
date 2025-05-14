@@ -1,6 +1,6 @@
 package com.itshixun.industy.fundusexamination;
 
-import com.itshixun.industy.fundusexamination.pojo.Config.AliOssConfig;
+import com.itshixun.industy.fundusexamination.config.AliOssConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

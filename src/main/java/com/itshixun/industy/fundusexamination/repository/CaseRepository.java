@@ -1,7 +1,7 @@
 package com.itshixun.industy.fundusexamination.repository;
 
 //import com.github.pagehelper.Page;
-import com.itshixun.industy.fundusexamination.pojo.Case;
+import com.itshixun.industy.fundusexamination.domain.po.Case;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

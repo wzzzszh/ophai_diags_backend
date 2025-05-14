@@ -1,7 +1,6 @@
 package com.itshixun.industy.fundusexamination.repository;
 
-import com.itshixun.industy.fundusexamination.pojo.NormalDiag;
-import com.itshixun.industy.fundusexamination.pojo.dto.NormalDiagDto;
+import com.itshixun.industy.fundusexamination.domain.po.NormalDiag;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

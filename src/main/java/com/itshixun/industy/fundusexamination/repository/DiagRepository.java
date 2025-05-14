@@ -1,8 +1,6 @@
 package com.itshixun.industy.fundusexamination.repository;
 
-import com.itshixun.industy.fundusexamination.pojo.NormalDiag;
-import jdk.jshell.Diag;
-import org.springframework.data.jpa.repository.JpaRepository;
+import com.itshixun.industy.fundusexamination.domain.po.NormalDiag;
 import org.springframework.data.repository.CrudRepository;
 
 public interface DiagRepository extends CrudRepository<NormalDiag, String> {
