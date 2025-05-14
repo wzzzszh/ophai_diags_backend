@@ -1,13 +1,11 @@
 package com.itshixun.industy.fundusexamination.service;
 
-import com.itshixun.industy.fundusexamination.domain.po.Case;
-import com.itshixun.industy.fundusexamination.domain.po.PageBean;
-import com.itshixun.industy.fundusexamination.domain.po.PatientInfo;
 import com.itshixun.industy.fundusexamination.domain.dto.CaseDTO;
 import com.itshixun.industy.fundusexamination.domain.dto.ImageDTO;
 import com.itshixun.industy.fundusexamination.domain.httpEnity.ResponseData;
-import jakarta.servlet.ServletOutputStream;
-import jakarta.validation.constraints.Min;
+import com.itshixun.industy.fundusexamination.domain.po.Case;
+import com.itshixun.industy.fundusexamination.domain.po.PageBean;
+import com.itshixun.industy.fundusexamination.domain.po.PatientInfo;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -25,7 +23,7 @@ public interface PreImageService {
      * @param caseDto
      * @return
      */
-    Case saveAndDiag(CaseDto caseDto);
+    Case saveAndDiag(CaseDTO caseDto);
 
     ResponseData sendUrltoP(int age,int gender,String name,String caseId,String urlLeft, String urlRight);
 

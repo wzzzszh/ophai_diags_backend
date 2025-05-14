@@ -1,24 +1,28 @@
 package com.itshixun.industy.fundusexamination.service.Impl;
 
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.write.style.column.LongestMatchColumnWidthStyleStrategy;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.itshixun.industy.fundusexamination.domain.dto.CaseDTO;
+import com.itshixun.industy.fundusexamination.domain.dto.ExcelDataDTO;
+import com.itshixun.industy.fundusexamination.domain.dto.ImageDTO;
+import com.itshixun.industy.fundusexamination.domain.httpEnity.ResponseData;
+import com.itshixun.industy.fundusexamination.domain.po.Case;
+import com.itshixun.industy.fundusexamination.domain.po.OriginImageData;
+import com.itshixun.industy.fundusexamination.domain.po.PageBean;
+import com.itshixun.industy.fundusexamination.domain.po.PatientInfo;
+import com.itshixun.industy.fundusexamination.exception.BusinessException;
+import com.itshixun.industy.fundusexamination.repository.CaseRepository;
+import com.itshixun.industy.fundusexamination.repository.PatientInfoRepository;
+import com.itshixun.industy.fundusexamination.repository.PreImageRepository;
 import com.itshixun.industy.fundusexamination.service.CaseService;
 import com.itshixun.industy.fundusexamination.service.PreImageService;
 import com.itshixun.industy.fundusexamination.utils.AliOssUtil;
 import com.itshixun.industy.fundusexamination.utils.RabbitMQ.ImageProcessMessage;
 import com.itshixun.industy.fundusexamination.utils.RabbitMQ.RabbitMQConfig;
 import com.itshixun.industy.fundusexamination.utils.ThreadLocalUtil;
-import com.itshixun.industy.fundusexamination.exception.BusinessException;
-import com.itshixun.industy.fundusexamination.domain.po.Case;
-import com.itshixun.industy.fundusexamination.domain.po.OriginImageData;
-import com.itshixun.industy.fundusexamination.domain.po.PageBean;
-import com.itshixun.industy.fundusexamination.domain.po.PatientInfo;
-import com.itshixun.industy.fundusexamination.domain.dto.CaseDTO;
-import com.itshixun.industy.fundusexamination.domain.dto.ImageDTO;
-import com.itshixun.industy.fundusexamination.domain.httpEnity.ResponseData;
-import com.itshixun.industy.fundusexamination.repository.CaseRepository;
-import com.itshixun.industy.fundusexamination.repository.PatientInfoRepository;
-import com.itshixun.industy.fundusexamination.repository.PreImageRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.amqp.AmqpException;
@@ -175,7 +179,7 @@ public class PreImageServiceImpl implements PreImageService {
                 throw new BusinessException(415,patientId + "病人不存在，请先添加病人信息" );
             }
             //2.3 新建case，保存该patientId到该病例的基本信息里面，初始化OriginImage，得到返回的caseId
-            CaseDto caseDto = new CaseDto();
+            CaseDTO caseDto = new CaseDTO();
             //2.3.1 设置责任医生的姓名
             Map<String,Object> map = ThreadLocalUtil.get();
             String responsibleDoctor = (String) map.get("userName");
@@ -512,11 +516,11 @@ public class PreImageServiceImpl implements PreImageService {
         //6.获取PageBean<ImageDTO>中的items
         List<ImageDTO> items = p2.getItems();
         //7.循环遍历items，获取每个ImageDTO中的leftImage和rightImage
-        List<ExcelData> excelDataList = new ArrayList<>();
+        List<ExcelDataDTO> excelDataList = new ArrayList<>();
 
         for (ImageDTO imageDTO : items) {
             String caseId = imageDTO.getCaseId();
-            ExcelData excelData = parseAiInfo(imageDTO);
+            ExcelDataDTO excelData = parseAiInfo(imageDTO);
             excelData.setCaseId(caseId);
             excelDataList.add(excelData);
         }
@@ -524,7 +528,7 @@ public class PreImageServiceImpl implements PreImageService {
 
         // 2. 直接通过 EasyExcel 写入 ZIP 流
         try {
-            EasyExcel.write(zipOut, ExcelData.class)
+            EasyExcel.write(zipOut, ExcelDataDTO.class)
                     .registerWriteHandler(new LongestMatchColumnWidthStyleStrategy())
                     .sheet("病例数据")
                     .doWrite(excelDataList);
@@ -587,8 +591,8 @@ public class PreImageServiceImpl implements PreImageService {
         return imageDTO;
     }
 
-    private ExcelData parseAiInfo(ImageDTO imageDTO) {
-        ExcelData data = new ExcelData();
+    private ExcelDataDTO parseAiInfo(ImageDTO imageDTO) {
+        ExcelDataDTO data = new ExcelDataDTO();
         data.setCaseId(imageDTO.getCaseId()); // 保持caseId直接赋值
 
         try {
