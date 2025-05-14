@@ -5,9 +5,7 @@ import com.alibaba.excel.write.style.column.LongestMatchColumnWidthStyleStrategy
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.itshixun.industy.fundusexamination.domain.dto.CaseDTO;
-import com.itshixun.industy.fundusexamination.domain.dto.ExcelDataDTO;
-import com.itshixun.industy.fundusexamination.domain.dto.ImageDTO;
+import com.itshixun.industy.fundusexamination.domain.dto.*;
 import com.itshixun.industy.fundusexamination.domain.httpEnity.ResponseData;
 import com.itshixun.industy.fundusexamination.domain.po.Case;
 import com.itshixun.industy.fundusexamination.domain.po.OriginImageData;
@@ -67,7 +65,8 @@ public class PreImageServiceImpl implements PreImageService {
     private AliOssUtil aliOssUtil;
     @Autowired
     private CaseRepository caseRepository;
-
+    // 初始化 ObjectMapper
+    private static final ObjectMapper objectMapper = new ObjectMapper();
     @Override
     public Case saveAndDiag(CaseDTO caseDto) {
         return null;
@@ -374,18 +373,34 @@ public class PreImageServiceImpl implements PreImageService {
         //7.循环遍历items，获取每个ImageDTO中的leftImage和rightImage
         for (ImageDTO imageDTO : items) {
             String caseId = imageDTO.getCaseId();
-            String leftImage = imageDTO.getOriginImageData().getLeftImage();
-            String rightImage = imageDTO.getOriginImageData().getRightImage();
-            //8.调用AliOssUtil的方法，将leftImage和rightImage下载到本地
-            // 写入左眼图片
-            writeImageToZip(zipOut, caseId, leftImage, "left.jpg");
-
-            // 写入右眼图片
-            writeImageToZip(zipOut, caseId, rightImage, "right.jpg");
+            // 7.1处理原始图像
+            OriginImageData origin = imageDTO.getOriginImageData();
+            if (origin != null) {
+                String leftImage = origin.getLeftImage();
+                String rightImage = origin.getRightImage();
+                //7.1.2.调用AliOssUtil的方法，将leftImage和rightImage下载到本地
+                // 写入原始左眼图片
+                writeImageToZip(zipOut, caseId, leftImage, leftImage.split("/")[4]);
+                // 写入原始右眼图片
+                writeImageToZip(zipOut, caseId, rightImage, rightImage.split("/")[4]);
+            }
+            // 8.处理 aiCaseInfo 中的图像
+            String aiCaseInfoStr = imageDTO.getAiCaseInfo();
+            System.out.println("原始 JSON 字符串内容：\n" + aiCaseInfoStr);
+            if (aiCaseInfoStr != null) {
+                try {
+                    ApiResponseDTO apiResponseDTO = objectMapper.readValue(aiCaseInfoStr, ApiResponseDTO.class);
+                    AICaseInfoDTO aiCaseInfo = apiResponseDTO.getAiCaseInfo();
+                    System.out.println(aiCaseInfo+"aiCaseInfo");
+                    processAICaseInfoImages(aiCaseInfo, caseId, zipOut);
+                } catch (Exception e) {
+                    // 处理异常，例如记录日志
+                    e.printStackTrace();
+                    log.error("处理aiCaseInfo时出错: {}", e.getMessage());
+                }
+            }
 
         }
-
-
     }
 
 //    @Override
@@ -469,7 +484,13 @@ public class PreImageServiceImpl implements PreImageService {
      * @param zipOut
      */
     @Override
-    public void exportDataToZip(Integer pageNum, Integer pageSize, Integer diagStatus, String[] diseaseName, Integer gender, Integer startAge, Integer endAge, LocalDateTime startDate, LocalDateTime endDate, ZipOutputStream zipOut) {
+    public void exportDataToZip(
+            Integer pageNum, Integer pageSize,
+            Integer diagStatus, String[] diseaseName,
+            Integer gender,
+            Integer startAge, Integer endAge,
+            LocalDateTime startDate, LocalDateTime endDate,
+            ZipOutputStream zipOut) {
         //1.分页的默认值的设置
         if (diagStatus != null && diagStatus == -1) {
             diagStatus = null;
@@ -537,6 +558,71 @@ public class PreImageServiceImpl implements PreImageService {
         }
     }
 
+    // 处理 AI 案例信息中的各类图像
+    private void processAICaseInfoImages(AICaseInfoDTO aiCaseInfo, String caseId, ZipOutputStream zipOut)
+    {
+        if (aiCaseInfo == null || aiCaseInfo.getImages() == null) {
+            log.info("没有获取到AI诊断的字段信息");
+            return;
+        }
+
+        // 处理 heatmaps 中的疾病图像
+        HeatmapsDTO heatmaps = aiCaseInfo.getImages().getHeatmaps();
+        if (heatmaps != null) {
+            List<String> diseases = heatmaps.getContains();
+            if (diseases != null) {
+                for (String disease : diseases) {
+                    processHeatmapUrls(heatmaps.getLeftDiseases(), disease, caseId, zipOut, "left");
+                    processHeatmapUrls(heatmaps.getRightDiseases(), disease, caseId, zipOut, "right");
+                }
+            }
+        }
+
+        // 处理 vessels 图像
+        VesselsDTO vessels = aiCaseInfo.getImages().getVessels();
+        if (vessels != null) {
+            log.info("vessels不为空");
+            writeImageToZip(zipOut, caseId, vessels.getLeft(), getFileNameFromUrl(vessels.getLeft()));
+            writeImageToZip(zipOut, caseId, vessels.getRight(), getFileNameFromUrl(vessels.getRight()));
+        }
+
+        // 处理 disks 图像
+        DisksDTO disks = aiCaseInfo.getImages().getDisks();
+        if (disks != null) {
+            log.info("disks不为空");
+            writeImageToZip(zipOut, caseId, disks.getLeft(), getFileNameFromUrl(disks.getLeft()));
+            writeImageToZip(zipOut, caseId, disks.getRight(), getFileNameFromUrl(disks.getRight()));
+        }
+
+        // 处理 original 图像（如果与原始图像不同）
+        OriginalDTO original = aiCaseInfo.getImages().getOriginal();
+        if (original != null) {
+            log.info("original不为空");
+            writeImageToZip(zipOut, caseId, original.getLeft(), getFileNameFromUrl(original.getLeft()));
+            writeImageToZip(zipOut, caseId, original.getRight(), getFileNameFromUrl(original.getRight()));
+        }
+    }
+
+    // 处理单个 heatmap 的 URL 列表
+    private void processHeatmapUrls(Map<String, List<String>> diseaseUrls, String disease, String caseId, ZipOutputStream zipOut, String eyeSide) {
+        if (diseaseUrls != null) {
+            List<String> urls = diseaseUrls.get(disease);
+            if (urls != null) {
+                for (String url : urls) {
+                    String fileName = getFileNameFromUrl(url);
+                    writeImageToZip(zipOut, caseId, url, fileName);
+                }
+            }
+        }
+    }
+
+    // 从 URL 提取文件名
+    private String getFileNameFromUrl(String url) {
+        if (url == null || url.isEmpty()) return "unknown.jpg";
+        int lastSlashIndex = url.lastIndexOf('/');
+        return (lastSlashIndex != -1) ? url.substring(lastSlashIndex + 1) : url;
+    }
+
     /**
      * 将单个图片流写入 ZIP 的指定文件夹
      */
@@ -594,7 +680,6 @@ public class PreImageServiceImpl implements PreImageService {
     private ExcelDataDTO parseAiInfo(ImageDTO imageDTO) {
         ExcelDataDTO data = new ExcelDataDTO();
         data.setCaseId(imageDTO.getCaseId()); // 保持caseId直接赋值
-
         try {
             // 直接获取整个AI信息的原始JSON字符串
             String rawJson = imageDTO.getAiCaseInfo();

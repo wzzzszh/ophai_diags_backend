@@ -15,4 +15,5 @@ public class ImageDTO {
     private OriginImageData originImageData;
 
     private String aiCaseInfo;
+
 }

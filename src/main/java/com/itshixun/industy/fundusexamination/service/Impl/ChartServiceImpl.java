@@ -1,11 +1,10 @@
 package com.itshixun.industy.fundusexamination.service.Impl;
 
-import com.itshixun.industy.fundusexamination.annotation.AddCache;
-import com.itshixun.industy.fundusexamination.service.ChartService;
-import com.itshixun.industy.fundusexamination.domain.vo.DailyCountVO;
 import com.itshixun.industy.fundusexamination.domain.vo.ChartVO;
+import com.itshixun.industy.fundusexamination.domain.vo.DailyCountVO;
 import com.itshixun.industy.fundusexamination.repository.CaseRepository;
 import com.itshixun.industy.fundusexamination.repository.PatientInfoRepository;
+import com.itshixun.industy.fundusexamination.service.ChartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,7 +24,7 @@ public class ChartServiceImpl implements ChartService {
     private PatientInfoRepository patientInfoRepository;
     @Autowired
     private CaseRepository caseRepository;
-    @AddCache(prefix = "chart",expire = 60*10)
+//    @AddCache(prefix = "chart",expire = 60*10)
     @Override
     public ChartVO selectAll() {
 

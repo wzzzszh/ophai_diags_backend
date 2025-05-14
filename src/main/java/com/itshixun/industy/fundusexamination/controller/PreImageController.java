@@ -1,15 +1,13 @@
 package com.itshixun.industy.fundusexamination.controller;
 
+import com.itshixun.industy.fundusexamination.domain.dto.ImageDTO;
+import com.itshixun.industy.fundusexamination.domain.httpEnity.ResponseData;
+import com.itshixun.industy.fundusexamination.domain.po.PageBean;
+import com.itshixun.industy.fundusexamination.exception.BusinessException;
 import com.itshixun.industy.fundusexamination.service.CaseService;
 import com.itshixun.industy.fundusexamination.service.PreImageService;
 import com.itshixun.industy.fundusexamination.utils.ResponseMessage;
-import com.itshixun.industy.fundusexamination.exception.BusinessException;
-import com.itshixun.industy.fundusexamination.domain.po.PageBean;
-import com.itshixun.industy.fundusexamination.domain.dto.ImageDTO;
-import com.itshixun.industy.fundusexamination.domain.httpEnity.ResponseData;
-import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.constraints.Min;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -37,8 +35,6 @@ public class PreImageController {
     public CaseService caseService;
     @Autowired
     public PreImageService preImageService;
-
-
 
 //    @PostMapping("/saveAndProcess1")
 //    public ResponseMessage<ResponseData> savePreAndProcess1(MultipartFile[] files)throws Exception{
@@ -264,8 +260,7 @@ public class PreImageController {
      * @param endDate
      * @param response
      */
-//    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-//    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
+
     @PostMapping("/exportExcel")
 // 也可用 @GetMapping，但若参数较多推荐 POST
     public void exportExcel(
@@ -284,7 +279,7 @@ public class PreImageController {
         // 1. 设置响应头（强制 ZIP 格式）
         String zipName = "数据导出_" + LocalDate.now() + ".zip";
         String encodedZipName = URLEncoder.encode(zipName, "UTF-8").replaceAll("\\+", "%20");
-        response.reset();
+
         response.setContentType("application/zip");
         response.setCharacterEncoding("UTF-8");
         response.setHeader("Content-Disposition", "attachment; filename=\"" + encodedZipName + "\"");
