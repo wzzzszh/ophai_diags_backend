@@ -46,7 +46,14 @@ public class RedisCacheAOP {
         //获取过期时间
         long expire = addCache.expire();
         //生成缓存的key
-        String key = prefix + "::"+joinPoint.getArgs()[0];
+
+        String key;
+
+        if (joinPoint.getArgs().length!=0) {
+            key = prefix + "::"+joinPoint.getArgs()[0];
+        } else {
+            key = prefix + "::"+method.getName();
+        }
         try {
             //从缓存中获取数据
             Object cacheValue = redisTemplate.opsForValue().get(key);

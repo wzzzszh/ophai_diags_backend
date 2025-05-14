@@ -40,6 +40,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -472,30 +473,21 @@ public class PreImageServiceImpl implements PreImageService {
 
     /**
      * 导出excelZIP
-     * @param pageNum
-     * @param pageSize
-     * @param diagStatus
-     * @param diseaseName
-     * @param gender
-     * @param startAge
-     * @param endAge
-     * @param startDate
-     * @param endDate
-     * @param zipOut
-     */
+     **/
     @Override
-    public void exportDataToZip(
+    public void exportDataToExcel(
             Integer pageNum, Integer pageSize,
             Integer diagStatus, String[] diseaseName,
             Integer gender,
             Integer startAge, Integer endAge,
             LocalDateTime startDate, LocalDateTime endDate,
-            ZipOutputStream zipOut) {
-        //1.分页的默认值的设置
+            OutputStream out) {
+
+        // 参数处理
         if (diagStatus != null && diagStatus == -1) {
             diagStatus = null;
         }
-        if ("全部".equals(diseaseName[0])) {
+        if (diseaseName != null && "全部".equals(diseaseName[0])) {
             diseaseName = null;
         }
         if (gender != null && gender == -1) {
@@ -507,19 +499,19 @@ public class PreImageServiceImpl implements PreImageService {
         if (endAge != null && endAge == -1) {
             endAge = null;
         }
-        //2.分页参数的设置
         if (pageNum == null || pageSize == null) {
             throw new IllegalArgumentException("页码和每页数量不能为空");
         }
+
         Pageable pageable = PageRequest.of(pageNum - 1, pageSize);
-        //3.将diseaseName转换成Json字符串
+
+        // 疾病名 JSON 处理
         String diseaseNameJson = null;
         try {
             ObjectMapper objectMapper = new ObjectMapper();
-            // 移除元素中的双引号（如果前端已经携带）
             if (diseaseName != null) {
                 diseaseName = Arrays.stream(diseaseName)
-                        .map(s -> s.replace("\"", "")) // 新增：去除每个疾病名称的双引号
+                        .map(s -> s.replace("\"", ""))
                         .toArray(String[]::new);
             }
             diseaseNameJson = diseaseName != null ?
@@ -527,16 +519,15 @@ public class PreImageServiceImpl implements PreImageService {
         } catch (JsonProcessingException e) {
             throw new IllegalArgumentException("疾病名称数组转换失败", e);
         }
-        //4.调用repository的方法
+
+        // 查询数据
         Page<Case> p = caseRepository.selectImageByPage(
                 diagStatus, diseaseNameJson,
                 gender, startAge, endAge,
                 startDate, endDate, pageable);
-        //5.将Page<Case>转换成PageBean<ImageDTO>
+
         PageBean<ImageDTO> p2 = convertToPageBean(p);
-        //6.获取PageBean<ImageDTO>中的items
         List<ImageDTO> items = p2.getItems();
-        //7.循环遍历items，获取每个ImageDTO中的leftImage和rightImage
         List<ExcelDataDTO> excelDataList = new ArrayList<>();
 
         for (ImageDTO imageDTO : items) {
@@ -545,11 +536,10 @@ public class PreImageServiceImpl implements PreImageService {
             excelData.setCaseId(caseId);
             excelDataList.add(excelData);
         }
-        System.out.println("excelDataList在这里"+excelDataList);
 
-        // 2. 直接通过 EasyExcel 写入 ZIP 流
+        // 使用 EasyExcel 写入输出流
         try {
-            EasyExcel.write(zipOut, ExcelDataDTO.class)
+            EasyExcel.write(out, ExcelDataDTO.class)
                     .registerWriteHandler(new LongestMatchColumnWidthStyleStrategy())
                     .sheet("病例数据")
                     .doWrite(excelDataList);

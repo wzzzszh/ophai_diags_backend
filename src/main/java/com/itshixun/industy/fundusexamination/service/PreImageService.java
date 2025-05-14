@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -57,8 +58,13 @@ public interface PreImageService {
 //
 //    void exportData(Integer pageNum, Integer pageSize, Integer diagStatus, String[] diseaseNameArray, Integer gender, Integer startAge, Integer endAge, LocalDateTime startDate, LocalDateTime endDate, ServletOutputStream out);
 
-    void exportDataToZip(Integer pageNum, Integer pageSize, Integer diagStatus, String[] diseaseNameArray, Integer gender, Integer startAge, Integer endAge, LocalDateTime startDate, LocalDateTime endDate, ZipOutputStream zipOut);
-
+    public void exportDataToExcel(
+            Integer pageNum, Integer pageSize,
+            Integer diagStatus, String[] diseaseName,
+            Integer gender,
+            Integer startAge, Integer endAge,
+            LocalDateTime startDate, LocalDateTime endDate,
+            OutputStream out);
 
 
 

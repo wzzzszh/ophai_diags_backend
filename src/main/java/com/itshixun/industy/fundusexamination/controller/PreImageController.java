@@ -6,19 +6,18 @@ import com.itshixun.industy.fundusexamination.domain.po.PageBean;
 import com.itshixun.industy.fundusexamination.exception.BusinessException;
 import com.itshixun.industy.fundusexamination.service.CaseService;
 import com.itshixun.industy.fundusexamination.service.PreImageService;
+import com.itshixun.industy.fundusexamination.utils.AliOssUtil;
 import com.itshixun.industy.fundusexamination.utils.ResponseMessage;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.time.LocalDate;
+import java.io.InputStream;
 import java.time.LocalDateTime;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 /**
@@ -198,32 +197,24 @@ public class PreImageController {
      * @param EndAge
      * @param startDate
      * @param endDate
-     * @param response
      */
     @PostMapping("/batchExportImage")
-    public void batchExportImage(
-            Integer pageNum,
-            Integer pageSize,
+    public ResponseMessage<String> batchExportImage(
+            @RequestParam(required = false) Integer pageNum,
+            @RequestParam(required = false) Integer pageSize,
             @RequestParam(required = false) Integer diagStatus,
             @RequestParam(required = false) String diseaseName,
             @RequestParam(required = false) Integer gender,
             @RequestParam(required = false) Integer StartAge,
             @RequestParam(required = false) Integer EndAge,
             @RequestParam(required = false) LocalDateTime startDate,
-            @RequestParam(required = false) LocalDateTime endDate,
-            HttpServletResponse response
+            @RequestParam(required = false) LocalDateTime endDate
     ) throws IOException {
-        // 1. 处理 diseaseName 为数组
-        String[] diseaseNameArray = diseaseName.split(",");
 
-        // 2. 设置响应头
-        response.setContentType("application/zip");
-        String fileName = "images_" + System.currentTimeMillis() + ".zip";
-        response.setHeader("Content-Disposition", "attachment; filename=" + fileName);
+        String[] diseaseNameArray = diseaseName != null ? diseaseName.split(",") : new String[0];
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-        // 3. 创建 ZIP 流（try-with-resources 自动管理资源）
-        try (ZipOutputStream zipOut = new ZipOutputStream(response.getOutputStream())) {
-            // 4. 调用 Service 层写入数据
+        try (ZipOutputStream zipOut = new ZipOutputStream(byteArrayOutputStream)) {
             preImageService.batchExportImage(
                     pageNum,
                     pageSize,
@@ -237,15 +228,14 @@ public class PreImageController {
                     zipOut
             );
         } catch (Exception e) {
-            // 5. 异常处理（确保响应未提交时才重置）
-            if (!response.isCommitted()) {
-                response.reset();
-                response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-                response.getWriter().write("导出失败: " + e.getMessage());
-            } else {
-                log.error("导出失败，但响应已提交", e);
-            }
+            return ResponseMessage.allError(500, "导出失败: " + e.getMessage());
         }
+
+        String fileName = "export/images_" + System.currentTimeMillis() + ".zip";
+        InputStream inputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+        String ossUrl = new AliOssUtil().uploadFile(fileName, inputStream);
+
+        return ResponseMessage.success("导出成功", ossUrl);
     }
     /**
      * 批量导出Excel
@@ -258,52 +248,38 @@ public class PreImageController {
      * @param EndAge
      * @param startDate
      * @param endDate
-     * @param response
      */
 
     @PostMapping("/exportExcel")
-// 也可用 @GetMapping，但若参数较多推荐 POST
-    public void exportExcel(
+    public ResponseMessage<String> exportExcel(
             @RequestParam(required = false) Integer pageNum,
             @RequestParam(required = false) Integer pageSize,
             @RequestParam(required = false) Integer diagStatus,
             @RequestParam(required = false) String diseaseName,
             @RequestParam(required = false) Integer gender,
-            @RequestParam(required = false) Integer StartAge, // 推荐小驼峰命名 StartAge -> startAge
+            @RequestParam(required = false) Integer StartAge,
             @RequestParam(required = false) Integer EndAge,
             @RequestParam(required = false) LocalDateTime startDate,
-            @RequestParam(required = false) LocalDateTime endDate,
-            HttpServletResponse response) throws IOException {
-        // 0. 处理 diseaseName 为数组
-        String[] diseaseNameArray = diseaseName.split(",");
-        // 1. 设置响应头（强制 ZIP 格式）
-        String zipName = "数据导出_" + LocalDate.now() + ".zip";
-        String encodedZipName = URLEncoder.encode(zipName, "UTF-8").replaceAll("\\+", "%20");
+            @RequestParam(required = false) LocalDateTime endDate) throws IOException {
 
-        response.setContentType("application/zip");
-        response.setCharacterEncoding("UTF-8");
-        response.setHeader("Content-Disposition", "attachment; filename=\"" + encodedZipName + "\"");
-        // 2. 获取输出流
-        try (ZipOutputStream zipOut = new ZipOutputStream(response.getOutputStream())) {
-            // 2. 生成 Excel 并写入 ZIP
-            String excelName = "病例数据_" + LocalDate.now() + ".xlsx";
-            ZipEntry zipEntry = new ZipEntry(excelName);
-            zipOut.putNextEntry(zipEntry);
+        String[] diseaseNameArray = diseaseName != null ? diseaseName.split(",") : new String[0];
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-            // 3. 调用 Service 层生成 Excel 到 ZIP 流
-            preImageService.exportDataToZip(
+        try {
+            // 直接生成 Excel 文件到 byteArrayOutputStream
+            preImageService.exportDataToExcel(
                     pageNum, pageSize, diagStatus, diseaseNameArray,
-                    gender, StartAge, EndAge, startDate, endDate, zipOut
+                    gender, StartAge, EndAge, startDate, endDate, byteArrayOutputStream
             );
-
-            zipOut.closeEntry();
         } catch (Exception e) {
-            if (!response.isCommitted()) {
-                response.reset();
-                response.setContentType("application/json");
-                response.getWriter().write("{\"code\":500, \"msg\":\"导出失败: " + e.getMessage() + "\"}");
-            } else {
-                log.error("ZIP导出异常（响应已提交）", e);
-            }
+            return ResponseMessage.allError(500, "导出失败: " + e.getMessage());
         }
-}}
+
+        // 上传到 OSS
+        String fileName = "export/case_data_" + System.currentTimeMillis() + ".xlsx";
+        InputStream inputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+        String ossUrl = new AliOssUtil().uploadFile(fileName, inputStream);
+
+        return ResponseMessage.success("导出成功", ossUrl);
+    }
+}
