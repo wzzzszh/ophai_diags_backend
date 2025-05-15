@@ -6,12 +6,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itshixun.industy.fundusexamination.annotation.AddCache;
 import com.itshixun.industy.fundusexamination.annotation.DelCache;
+import com.itshixun.industy.fundusexamination.domain.dto.*;
 import com.itshixun.industy.fundusexamination.domain.po.*;
+import com.itshixun.industy.fundusexamination.exception.BusinessException;
+import com.itshixun.industy.fundusexamination.repository.*;
 import com.itshixun.industy.fundusexamination.service.CaseService;
 import com.itshixun.industy.fundusexamination.utils.ThreadLocalUtil;
-import com.itshixun.industy.fundusexamination.exception.BusinessException;
-import com.itshixun.industy.fundusexamination.domain.dto.*;
-import com.itshixun.industy.fundusexamination.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -193,18 +193,21 @@ public class CaseServiceImpl implements CaseService {
                 .orElseThrow(() -> new RuntimeException("病例不存在 ID：" + caseId));
         //2.查询caseId是否已经诊断过,赋值
         log.info("查询caseID完成");
-        if(caseDto.getDiseaseName()!=null){
+        if(caseDto.getDiseaseName()!=null&&caseDto.getDiseaseName().length!=0){
             aCase.setDiseaseName(caseDto.getDiseaseName());
             caseRepository.save(aCase);
         }
-        log.info("赋值完成");
+
         if(caseDto.getNormalDiag().getDocSuggestions()!=null){
+            log.info("哇塞居然有医嘱内容："+caseDto.getNormalDiag().getDocSuggestions());
             Map<String,Object> map = ThreadLocalUtil.get();
             String responsibleDoctor = (String) map.get("userName");
             //放置医嘱以及状态转换
             addNormalDiag(caseId, responsibleDoctor, docSuggestions, marks);
             caseDto.getNormalDiag().setDoctorName(responsibleDoctor);
             caseDto.setDiagStatus(2);
+        }else{
+            caseDto.setDiagStatus(1);
         }
 
         // 更新diseaseName
@@ -224,7 +227,7 @@ public class CaseServiceImpl implements CaseService {
         Page<Case> casePage = caseRepository.findByPatientInfoPatientId(patientId,pageable);
         // 3. 转换为 DTO 并封装到 PageBean
         PageBean<HistoryCaseListDTO> pageBean = convertTohisPageBean(casePage);
-//        System.out.println(pageBean.toString());
+
                 return pageBean;
     }
 
@@ -359,16 +362,15 @@ public class CaseServiceImpl implements CaseService {
                 String[] diseaseArray = mapper.readValue(caseEntity.getDiseaseNameJson(), String[].class);
 
                 // 处理 ["null"] 的特殊情况
-
                 if(diseaseArray == null || (diseaseArray.length == 1 && "null".equals(diseaseArray[0]))){
-                    dto.setDiseaseName(new String[0]);  // 设置为空数组
+//                    dto.setDiseaseName(new String[0]);  // 设置为空数组
                     System.out.println("空数组"+diseaseArray);
                 } else {
                     dto.setDiseaseName(diseaseArray);
                     System.out.println("非空"+diseaseArray);// 直接赋值数组
                 }
             } else {
-                dto.setDiseaseName(new String[0]);  // 空数组
+//                dto.setDiseaseName(new String[0]);  // 空数组
             }
         } catch (Exception e) {
             throw new RuntimeException("疾病名称转换失败", e);
@@ -385,13 +387,14 @@ public class CaseServiceImpl implements CaseService {
         if(doctorName != null){
             diag.setDoctorName(doctorName);
         }
-        if(suggestions != null){
+        if(suggestions != null&& !suggestions.isEmpty()){
             diag.setDocSuggestions(suggestions);  // 假设已正确映射医生建议字段
         }
-
         // 2. 关联 Case（通过 caseId）
         Case caseEntity = caseRepository.selectById(caseId).orElseThrow(() -> new BusinessException(416,"病例不存在"));
+        // 2.1如果没有医嘱，就不添加
         diag.setCaseEntity(caseEntity);
+        // 2.2 设置诊断状态
         caseRepository.setDiagStatusById(caseId);
         // 3.放置Mask标注
         if (marks != null) {
@@ -404,7 +407,7 @@ public class CaseServiceImpl implements CaseService {
 
                     Mark save = markRepository.save(mark);
                     Mark newm = markRepository.findById(save.getId()).get();
-                    log.info("nonono"+newm.toString());
+//                    log.info("nonono"+newm.toString());
                 } else {
                     mark.setId(null);
                     markRepository.save(mark); // 新对象，直接保存
@@ -412,7 +415,7 @@ public class CaseServiceImpl implements CaseService {
             }
         }
         // 4. 保存该病例的诊断信息
-        if(diag != null){
+        if (suggestions != null && diag != null && !suggestions.isEmpty()) {
             normalDiagRepository.save(diag);
         }
 

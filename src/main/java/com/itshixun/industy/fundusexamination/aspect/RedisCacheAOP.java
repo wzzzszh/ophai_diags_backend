@@ -105,14 +105,6 @@ public class RedisCacheAOP {
             String key = prefix + "::"+args[keyIndex];
             redisTemplate.delete(key);
             logger.info("缓存删除成功: " + key);
-//            // 2. 或者使用模式匹配，删除所有相关缓存（更安全但性能较低）
-//            String pattern = prefix + "::*";
-//            Set<String> keys = redisTemplate.keys(pattern);
-//            if (keys != null && !keys.isEmpty()) {
-//                redisTemplate.delete(keys);
-//                logger.info("删除缓存前缀 {} 下的所有数据, 共 {} 条");
-//            }
-
         }
     }
 }
