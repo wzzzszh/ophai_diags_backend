@@ -11,6 +11,7 @@ import com.itshixun.industy.fundusexamination.domain.po.NormalDiag;
 import com.itshixun.industy.fundusexamination.domain.po.PageBean;
 import com.itshixun.industy.fundusexamination.domain.dto.*;
 import com.itshixun.industy.fundusexamination.repository.NormalDiagRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
-
+@Slf4j
 @RestController
 @RequestMapping("/api/case")
 public class CaseContoller {
@@ -125,6 +126,7 @@ public class CaseContoller {
     @PostMapping("/update")
     public ResponseMessage<String> updateNorCase(@RequestBody CaseUpdateDTO caseDto) {
         CaseUpdateDTO CaseNew;
+        log.info("caseDto:{}",caseDto);
         CaseNew = caseService.updateNorDiag(caseDto.getCaseId(),caseDto);
         if(CaseNew.getDiagStatus()==2) {
             return ResponseMessage.success("修改医嘱成功");

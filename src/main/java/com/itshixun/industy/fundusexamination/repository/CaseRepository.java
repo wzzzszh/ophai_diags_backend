@@ -1,15 +1,15 @@
 package com.itshixun.industy.fundusexamination.repository;
 
 //import com.github.pagehelper.Page;
+
 import com.itshixun.industy.fundusexamination.domain.po.Case;
-import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import org.springframework.data.domain.Page;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,12 +26,12 @@ public interface CaseRepository extends JpaRepository<Case, String> {
      * @param pageable
      * @return
      */
-    @Query("SELECT c FROM Case c " +
+    @Query("SELECT c FROM Case c JOIN FETCH c.patientInfo p " +
             "WHERE (:diagStatus IS NULL OR c.diagStatus = :diagStatus) " +
             "AND (:diseaseNameJson IS NULL OR c.diseaseNameJson = :diseaseNameJson) " +
-            "AND (:patientInfoPatientId IS NULL OR c.patientInfo.patientId = :patientInfoPatientId)"+
-            "AND c.isDeleted = 0" +
-            " ORDER BY c.createDate DESC")
+            "AND (:patientInfoPatientId IS NULL OR p.patientId = :patientInfoPatientId) " +
+            "AND c.isDeleted = 0 " +
+            "ORDER BY c.createDate DESC")
     Page<Case> list(@Param("diagStatus") Integer diagStatus,
                     @Param("diseaseNameJson") String diseaseNameJson,
                     @Param("patientInfoPatientId") String patientInfoPatientId,
@@ -43,7 +43,6 @@ public interface CaseRepository extends JpaRepository<Case, String> {
      * @param caseId
      */
     @Modifying
-    @Transactional
     @Query("UPDATE Case c SET c.isDeleted = 1 WHERE c.caseId = :caseId")
     void updateById(@Param("caseId") String caseId);
     /**
@@ -52,8 +51,8 @@ public interface CaseRepository extends JpaRepository<Case, String> {
      * @return
      */
     // @Transactional
-    @Transactional
-    @Query("SELECT c FROM Case c WHERE c.caseId = :caseId AND c.isDeleted = 0")
+    @Query("SELECT c FROM Case c JOIN FETCH c.patientInfo " +
+            "WHERE c.caseId = :caseId AND c.isDeleted = 0")
     Optional<Case> selectById(@Param("caseId") String caseId);
 
 
@@ -78,7 +77,6 @@ public interface CaseRepository extends JpaRepository<Case, String> {
      * @param caseId
      */
     @Modifying
-    @Transactional
     @Query
             ("update Case c set c.diagStatus = 2 where c.caseId = :caseId")
     void setDiagStatusById(@Param("caseId") String caseId);

@@ -24,7 +24,7 @@ public class Mark {
     private Case caseEntity;
     //数据
     @Lob
-    @Column(name = "data", columnDefinition = "TEXT")
+    @Column(name = "data", columnDefinition = "LONGTEXT")
     private String data;
     //类型
     //原图12，视盘34，血管56，热力图7-16

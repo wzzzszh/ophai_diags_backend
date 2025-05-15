@@ -13,6 +13,7 @@ import com.itshixun.industy.fundusexamination.exception.BusinessException;
 import com.itshixun.industy.fundusexamination.domain.dto.*;
 import com.itshixun.industy.fundusexamination.repository.*;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+@Slf4j
 @Transactional
 @Service
 public class CaseServiceImpl implements CaseService {
@@ -181,8 +183,8 @@ public class CaseServiceImpl implements CaseService {
     }
     @DelCache(prefix = "case")
     @Override
-    @Transactional
     public CaseUpdateDTO updateNorDiag(String caseId,CaseUpdateDTO caseDto) {
+        log.info("更新病例信息");
         //0.提取属性
         List<Mark> marks = caseDto.getMarks();
         String docSuggestions = caseDto.getNormalDiag().getDocSuggestions();
@@ -190,15 +192,17 @@ public class CaseServiceImpl implements CaseService {
         Case aCase = caseRepository.selectById(caseId)
                 .orElseThrow(() -> new RuntimeException("病例不存在 ID：" + caseId));
         //2.查询caseId是否已经诊断过,赋值
+        log.info("查询caseID完成");
         if(caseDto.getDiseaseName()!=null){
             aCase.setDiseaseName(caseDto.getDiseaseName());
             caseRepository.save(aCase);
         }
+        log.info("赋值完成");
         if(caseDto.getNormalDiag().getDocSuggestions()!=null){
             Map<String,Object> map = ThreadLocalUtil.get();
             String responsibleDoctor = (String) map.get("userName");
             //放置医嘱以及状态转换
-            addNormalDiag(caseId, responsibleDoctor, docSuggestions,marks);
+            addNormalDiag(caseId, responsibleDoctor, docSuggestions, marks);
             caseDto.getNormalDiag().setDoctorName(responsibleDoctor);
             caseDto.setDiagStatus(2);
         }
@@ -276,11 +280,14 @@ public class CaseServiceImpl implements CaseService {
         String jsonNodeStr = casePojo.getAiCaseInfo();
         ObjectMapper objectMapper = new ObjectMapper();
         JCaseDTO jcaseDto = new JCaseDTO();
-        List<Mark> marks = getMarksByCaseId(caseId);
-        // 将marks中的所有CaseEntity设置为null
-        for (Mark mark : marks) {
-            mark.setCaseEntity(null);
-        }
+
+        List<Mark> marks = getMarksByCaseId(caseId).stream()
+                .map(mark -> {
+                    Mark copy = new Mark();
+                    BeanUtils.copyProperties(mark, copy);
+                    copy.setCaseEntity(null);
+                    return copy;
+                }).collect(Collectors.toList());
         //往dto里面放数据
         try {
             JsonNode jsonNode = objectMapper.readTree(jsonNodeStr);
@@ -291,6 +298,7 @@ public class CaseServiceImpl implements CaseService {
             jcaseDto.setHistoryCaseListDto(filteredPb);
             jcaseDto.setDoctorDiags(normalDiagObjList);
             jcaseDto.setMarks(marks);
+            jcaseDto.setPatientInfo(casePojo.getPatientInfo());
             // 现在你可以使用 jsonNode 对象进行后续操作
         } catch (Exception e) {
             e.printStackTrace();
@@ -368,8 +376,9 @@ public class CaseServiceImpl implements CaseService {
 
         return dto;
     }
-    @Transactional
+
     public void addNormalDiag(String caseId, String doctorName, String suggestions,List<Mark> marks) {
+        log.info("添加诊断信息");
         // 1. 创建 NormalDiag 对象
 
         NormalDiag diag = new NormalDiag();
@@ -385,10 +394,21 @@ public class CaseServiceImpl implements CaseService {
         diag.setCaseEntity(caseEntity);
         caseRepository.setDiagStatusById(caseId);
         // 3.放置Mask标注
-        if(marks != null){
+        if (marks != null) {
             for (Mark mark : marks) {
                 mark.setCaseEntity(caseEntity);
-                markRepository.save(mark);
+                log.info(mark.toString());
+                if (mark.getId() != null && markRepository.existsById(mark.getId())) {
+                    log.info("mark已存在，更新mark");
+                    log.info(mark.toString());
+
+                    Mark save = markRepository.save(mark);
+                    Mark newm = markRepository.findById(save.getId()).get();
+                    log.info("nonono"+newm.toString());
+                } else {
+                    mark.setId(null);
+                    markRepository.save(mark); // 新对象，直接保存
+                }
             }
         }
         // 4. 保存该病例的诊断信息
