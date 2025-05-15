@@ -35,7 +35,7 @@ public class NormalDiag {
     @Column(name = "doctor_name")
     private String doctorName;
     // 新增对Case的反向关联
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne()
     @JoinColumn(name = "case_id")
     private Case caseEntity;
     @Column(name = "doc_suggestions")

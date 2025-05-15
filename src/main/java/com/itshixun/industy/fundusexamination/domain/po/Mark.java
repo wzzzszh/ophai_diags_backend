@@ -19,7 +19,7 @@ public class Mark {
     )
     private String id;
     //病例id,外键
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne()
     @JoinColumn(name = "case_id")
     private Case caseEntity;
     //数据

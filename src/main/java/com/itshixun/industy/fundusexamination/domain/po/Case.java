@@ -38,18 +38,18 @@ public class Case {
     )
     private String caseId;
     //患者信息
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "patient_info_patient_id")
     private PatientInfo patientInfo;
     //原始照片
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "oriimage_data_id")
     private OriginImageData originImageData;
     //一个json格式字段
     @Column(name = "ai_case_info", columnDefinition = "JSON") // MySQL专用语法
     private String aiCaseInfo;
     //医生诊断
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "nor_diag_id")
     private NormalDiag doctorDiag;
     // 修正为多个医生诊断
