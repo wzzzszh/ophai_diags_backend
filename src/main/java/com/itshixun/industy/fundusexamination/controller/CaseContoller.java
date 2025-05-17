@@ -110,7 +110,7 @@ public class CaseContoller {
      * @param caseId
      * @return
      */
-    @UserPermission({UserPermissionEnum.DOCTOR})
+    @UserPermission({UserPermissionEnum.DOCTOR, UserPermissionEnum.SCIENTIST})
     @GetMapping("/simple/{caseId}")
     public ResponseMessage<JCaseDTO> getCaseById(@PathVariable String caseId) {
         JCaseDTO jcaseDto = caseService.getRealCaseById(caseId);
