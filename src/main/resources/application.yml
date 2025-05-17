@@ -37,3 +37,4 @@ ali:
     secretAccessKey: ${ALI_OSS_SECRET_ACCESS_KEY}
 
 ip: 120.55.183.84
+

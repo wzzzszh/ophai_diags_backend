@@ -5,20 +5,21 @@ import cn.hutool.core.bean.BeanUtil;
 import com.itshixun.industy.fundusexamination.annotation.AddCache;
 import com.itshixun.industy.fundusexamination.annotation.DelCache;
 import com.itshixun.industy.fundusexamination.domain.dto.*;
-import com.itshixun.industy.fundusexamination.domain.po.PatientInfo;
-import com.itshixun.industy.fundusexamination.domain.vo.UserPatientVO;
-import com.itshixun.industy.fundusexamination.repository.PatientInfoRepository;
-import com.itshixun.industy.fundusexamination.service.UserService;
-import com.itshixun.industy.fundusexamination.utils.Md5Util;
-import com.itshixun.industy.fundusexamination.utils.ThreadLocalUtil;
-import com.itshixun.industy.fundusexamination.exception.BusinessException;
 import com.itshixun.industy.fundusexamination.domain.enums.UserPermissionEnum;
 import com.itshixun.industy.fundusexamination.domain.po.InvitationCode;
 import com.itshixun.industy.fundusexamination.domain.po.PageBean;
+import com.itshixun.industy.fundusexamination.domain.po.PatientInfo;
 import com.itshixun.industy.fundusexamination.domain.po.User;
+import com.itshixun.industy.fundusexamination.domain.vo.UserPatientVO;
+import com.itshixun.industy.fundusexamination.exception.BusinessException;
 import com.itshixun.industy.fundusexamination.repository.InvitationCodeRepository;
+import com.itshixun.industy.fundusexamination.repository.PatientInfoRepository;
 import com.itshixun.industy.fundusexamination.repository.UserRepository;
+import com.itshixun.industy.fundusexamination.service.UserService;
+import com.itshixun.industy.fundusexamination.utils.Md5Util;
+import com.itshixun.industy.fundusexamination.utils.ThreadLocalUtil;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -28,7 +29,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.stream.Collectors;
-
+@Slf4j
 @Service
 @Transactional
 public class UserServiceImpl implements UserService {
@@ -74,6 +75,7 @@ public class UserServiceImpl implements UserService {
         User saveUser = null;
         try {
             saveUser = userRepository.save(userPojo);
+            log.info("用户注册成功，用户id为：{}", saveUser.getUserId());
             invitationCodeRepository.delete(code);
         } catch (Exception e) {
             throw new RuntimeException(e);

@@ -5,6 +5,7 @@ import com.itshixun.industy.fundusexamination.domain.vo.DailyCountVO;
 import com.itshixun.industy.fundusexamination.repository.CaseRepository;
 import com.itshixun.industy.fundusexamination.repository.PatientInfoRepository;
 import com.itshixun.industy.fundusexamination.service.ChartService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +18,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
+@Slf4j
 @Service
 public class ChartServiceImpl implements ChartService {
     @Autowired
@@ -31,6 +32,7 @@ public class ChartServiceImpl implements ChartService {
         ChartVO chartVO = new ChartVO();
         //1.今日新增
         chartVO.setTotalPatientData(countTodayPatients());
+        log.info("今日新增患者数量"+chartVO.getTotalPatientData());
         //2.获取本周每天的数据
         // 2.本周每日数据（新增部分）
         // 修改后的日期范围计算方式
@@ -47,11 +49,11 @@ public class ChartServiceImpl implements ChartService {
         //5.年龄分布
         Map<String, Integer> DageData = getAgeDistributionByDisease("糖尿病");
         Map<String, Integer> CageData = getAgeDistributionByDisease("白内障");
-        Map<String, Integer> AageData = getAgeDistributionByDisease("AMD");
+        Map<String, Integer> AageData = getAgeDistributionByDisease("老年性黄斑变性");
         Map<String, Integer> GAgeData = getAgeDistributionByDisease("青光眼");
         Map<String, Integer> HAgeData = getAgeDistributionByDisease("高血压");
         Map<String, Integer> MAgeData = getAgeDistributionByDisease("近视");
-        Map<String, Integer> OAgeData = getAgeDistributionByDisease("其他");
+        Map<String, Integer> OAgeData = getAgeDistributionByDisease("其他疾病");
         chartVO.setDAgeData((LinkedHashMap<String, Integer>) DageData);
         chartVO.setCAgeData((LinkedHashMap<String, Integer>) CageData);
         chartVO.setAAgeData((LinkedHashMap<String, Integer>) AageData);
@@ -85,7 +87,9 @@ public class ChartServiceImpl implements ChartService {
     //今日新增
     public Integer countTodayPatients() {
         LocalDateTime todayStart = LocalDate.now().atStartOfDay();
+        log.info("1111"+todayStart.toString());
         LocalDateTime tomorrowStart = todayStart.plusDays(1);
+        log.info("2222"+tomorrowStart.toString());
         return patientInfoRepository.countByCreateDateBetween(todayStart, tomorrowStart);
     }
 

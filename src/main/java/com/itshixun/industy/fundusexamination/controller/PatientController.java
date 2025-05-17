@@ -64,8 +64,11 @@ public class PatientController {
      */
     @GetMapping("/batch")
     public ResponseMessage<PageBean<HistoryCaseListDTO>> batchSelectPatientList(
-            @RequestParam(required = false) String patientId){
+             String patientId){
         PageBean<HistoryCaseListDTO> pageBean = caseService.getHistoryCaseListByPage(patientId);
+        if(pageBean.getTotal()==0) {
+            return ResponseMessage.allError(408,"没有查询到病例");
+        }
         return ResponseMessage.success(pageBean);
     }
     /**

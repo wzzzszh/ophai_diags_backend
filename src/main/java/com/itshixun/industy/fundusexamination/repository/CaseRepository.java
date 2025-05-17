@@ -98,9 +98,11 @@ public interface CaseRepository extends JpaRepository<Case, String> {
     @Query(value = "SELECT DISTINCT c.`patient_info_patient_id` FROM cases c WHERE JSON_CONTAINS(c.disease_name, CONCAT('\"', :diseaseName, '\"'))",
             nativeQuery = true)
     List<String> findPatientIdsByDiseaseNameContaining(@Param("diseaseName") String diseaseName);
+
+
     @Query("SELECT c FROM Case c " +
             "WHERE (:diagStatus IS NULL OR c.diagStatus = :diagStatus) " +
-            "AND (:diseaseNameJson IS NULL OR c.diseaseNameJson = :diseaseNameJson) " +
+            "AND (:diseaseNameJson IS NULL OR c.diseaseNameJson LIKE CONCAT('%', :diseaseNameJson, '%'))" +
             "AND (:gender IS NULL OR c.patientInfo.gender = :gender) " +
             "AND (:startAge IS NULL OR c.patientInfo.age >= :startAge) " +
             "AND (:endAge IS NULL OR c.patientInfo.age <= :endAge) " +
@@ -114,9 +116,6 @@ public interface CaseRepository extends JpaRepository<Case, String> {
             Integer startAge, Integer endAge,
             LocalDateTime startDate, LocalDateTime endDate,
             Pageable pageable);
-
-
-
 
 
 }

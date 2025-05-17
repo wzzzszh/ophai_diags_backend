@@ -168,6 +168,14 @@ public class PreImageController {
         PageBean<ImageDTO> p = null;
         try {
             String[] diseaseNameArray = diseaseName.split(",");
+            // 如果 startDate 为 null，将其默认值设为 1970 年 1 月 1 日 0 时 0 分 0 秒
+            if(startDate == null){
+                startDate = LocalDateTime.of(1970, 1, 1, 0, 0, 0);
+            }
+            // 如果 endDate 为 null，将其默认值设为 1970 年 1 月 1 日 0 时 0 分 0 秒
+            if(endDate == null){
+                endDate = LocalDateTime.of(1970, 1, 1, 0, 0, 0);
+            }
             p = preImageService.SelectImageByPage(
                     pageNum,
                     pageSize,
@@ -179,6 +187,7 @@ public class PreImageController {
                     startDate,
                     endDate);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new BusinessException(600,"查询失败");
         }
 

@@ -14,8 +14,11 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        //打印请求体
+
         //登陆注册接口不拦截
         registry.addInterceptor(loginInterceptor).
                 excludePathPatterns("/api/user/login","/api/user/logout","/api/user/register","/api/user/patient/register");
     }
+
 }

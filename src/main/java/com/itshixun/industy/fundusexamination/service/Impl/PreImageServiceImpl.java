@@ -173,6 +173,10 @@ public class PreImageServiceImpl implements PreImageService {
             //2.1 获取键值对，并且循环接收pictures
             String patientId = entry.getKey();
             List<MultipartFile> pictures = entry.getValue();
+            // 2.1.1检查 pictures 列表长度是否小于 2
+            if (pictures.size() < 2) {
+                throw new BusinessException(454, "患者 ID 为 " + patientId + " 的文件数量少于 2 个，请确保上传左右眼图片");
+            }
             //2.2 判断patientId是否存在patient
             if(!caseService.isPatientExist(patientId)){
 //                return ResponseMessage.allError(415,patientId + "病人不存在，请先添加病人信息" );
@@ -287,6 +291,14 @@ public class PreImageServiceImpl implements PreImageService {
         if (endAge != null && endAge == -1) {
             endAge = null;
         }
+        LocalDateTime specialDate = LocalDateTime.of(1970, 1, 1, 0, 0, 0);
+        if(startDate.isEqual(specialDate)){
+            startDate = null;
+        }
+
+        if (endDate != null && endDate.isEqual(specialDate)) {
+            endDate = null;
+        }
         //2.分页参数的设置
         if (pageNum == null || pageSize == null) {
             throw new IllegalArgumentException("页码和每页数量不能为空");
@@ -307,15 +319,19 @@ public class PreImageServiceImpl implements PreImageService {
         } catch (JsonProcessingException e) {
             throw new IllegalArgumentException("疾病名称数组转换失败", e);
         }
+        if(diseaseNameJson!=null) {
+            //去除掉diseaseNameJson字段的[
+            diseaseNameJson = diseaseNameJson.replace("[", "").replace("]", "");
+        }// 去掉所有左方括号
         //4.调用repository的方法
         Page<Case> p = caseRepository.selectImageByPage(
                 diagStatus, diseaseNameJson,
                 gender, startAge, endAge,
                 startDate, endDate, pageable);
-        log.info("查询到的p"+p);
+
         //5.将Page<Case>转换成PageBean<ImageDTO>
         PageBean<ImageDTO> p2 = convertToPageBean(p);
-        log.info("查询到的p2"+p2);
+
         return p2;
     }
 
@@ -404,72 +420,6 @@ public class PreImageServiceImpl implements PreImageService {
         }
     }
 
-//    @Override
-//    public void exportData(Integer pageNum, Integer pageSize, Integer diagStatus, String[] diseaseName, Integer gender, Integer startAge, Integer endAge, LocalDateTime startDate, LocalDateTime endDate, ServletOutputStream out) {
-//        //1.分页的默认值的设置
-//        if (diagStatus != null && diagStatus == -1) {
-//            diagStatus = null;
-//        }
-//        if ("全部".equals(diseaseName[0])) {
-//            diseaseName = null;
-//        }
-//        if (gender != null && gender == -1) {
-//            gender = null;
-//        }
-//        if (startAge != null && startAge == -1) {
-//            startAge = null;
-//        }
-//        if (endAge != null && endAge == -1) {
-//            endAge = null;
-//        }
-//        //2.分页参数的设置
-//        if (pageNum == null || pageSize == null) {
-//            throw new IllegalArgumentException("页码和每页数量不能为空");
-//        }
-//        Pageable pageable = PageRequest.of(pageNum - 1, pageSize);
-//        //3.将diseaseName转换成Json字符串
-//        String diseaseNameJson = null;
-//        try {
-//            ObjectMapper objectMapper = new ObjectMapper();
-//            // 移除元素中的双引号（如果前端已经携带）
-//            if (diseaseName != null) {
-//                diseaseName = Arrays.stream(diseaseName)
-//                        .map(s -> s.replace("\"", "")) // 新增：去除每个疾病名称的双引号
-//                        .toArray(String[]::new);
-//            }
-//            diseaseNameJson = diseaseName != null ?
-//                    objectMapper.writeValueAsString(diseaseName) : null;
-//        } catch (JsonProcessingException e) {
-//            throw new IllegalArgumentException("疾病名称数组转换失败", e);
-//        }
-//        //4.调用repository的方法
-//        Page<Case> p = caseRepository.selectImageByPage(
-//                diagStatus, diseaseNameJson,
-//                gender, startAge, endAge,
-//                startDate, endDate, pageable);
-//        //5.将Page<Case>转换成PageBean<ImageDTO>
-//        PageBean<ImageDTO> p2 = convertToPageBean(p);
-//        //6.获取PageBean<ImageDTO>中的items
-//        List<ImageDTO> items = p2.getItems();
-//        //7.循环遍历items，获取每个ImageDTO中的leftImage和rightImage
-//        List<ExcelData> excelDataList = new ArrayList<>();
-//
-//        for (ImageDTO imageDTO : items) {
-//            String caseId = imageDTO.getCaseId();
-//            ExcelData excelData = parseAiInfo(imageDTO);
-//            excelData.setCaseId(caseId);
-//            excelDataList.add(excelData);
-//        }
-//        System.out.println("excelDataList在这里"+excelDataList);
-//        try {
-//            EasyExcel.write(out, ExcelData.class)
-//                    .registerWriteHandler(new LongestMatchColumnWidthStyleStrategy()) // 自动列宽
-//                    .sheet("病例数据")
-//                    .doWrite(excelDataList);
-//        } catch (Exception e) {
-//            throw new RuntimeException("导出Excel失败", e);
-//        }
-//    }
 
     /**
      * 导出excelZIP
@@ -547,6 +497,8 @@ public class PreImageServiceImpl implements PreImageService {
             throw new RuntimeException("Excel生成失败", e);
         }
     }
+
+
 
     // 处理 AI 案例信息中的各类图像
     private void processAICaseInfoImages(AICaseInfoDTO aiCaseInfo, String caseId, ZipOutputStream zipOut)

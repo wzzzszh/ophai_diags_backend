@@ -39,12 +39,13 @@ public class SecurityAOP {
         }
         for (UserPermissionEnum requiredPermission : requiredPermissions) {
             if ( permission  ==  requiredPermission) {
-                break;
-            }else {
-                throw new BusinessException(403,"权限不足");
+                return joinPoint.proceed();
             }
         }
-        return joinPoint.proceed();
+
+        throw new BusinessException(403,"权限不足");
+
+
 
     }
 
