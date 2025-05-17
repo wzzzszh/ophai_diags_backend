@@ -34,6 +34,8 @@ public class CreateUserByAdminDTO {
 //    @Pattern(regexp = "^[\\u4e00-\\u9fa5·•]{2,16}$",
 //            message = "请输入有效的中文姓名（2-16个汉字，可包含间隔号）")
 //    private String realName;
+
+    private Integer doctorNumber;
     // 性别
     // 0: 男
     // 1: 女

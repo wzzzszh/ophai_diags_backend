@@ -21,6 +21,8 @@ public class UserVO {
     private String phone;
     // 真实姓名
     private String realName;
+
+    private Integer doctorNumber;
     // 性别
     // 0: 男
     // 1: 女
